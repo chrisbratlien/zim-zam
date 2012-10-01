@@ -1,0 +1,9 @@
+body.new-coupon fieldset label {  }
+body.new-coupon fieldset label input {  }
+
+body.new-coupon table#coupons td { border: 1px solid blue; }
+body.new-coupon textarea { width: 50%; height: 5em; }
+
+body.new-vendor #vendors table td img { width: 80px; }
+
+body.home #results table td img { width: 80px; }

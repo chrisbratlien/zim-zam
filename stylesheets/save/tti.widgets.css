@@ -1,0 +1,10 @@
+.tti-selector { font-family: Georgia; color: #888; }
+.tti-selector ul { list-style-type: none; margin: 0.2em 0 0 0; padding: 0; }
+.tti-selector ul li { min-height: 1em; padding: 0.3em 0 0.3em 1.4em; border-top: 1px solid #eee; cursor: pointer; }
+.tti-selector ul li.selected { background: url(../images/Checkmark32.png); background-size: 1em 1em; background-repeat: no-repeat; background-position: 0em 0.4em; }
+
+.tti-selector .title { font-weight: bold; }
+
+
+.tti-checkbox { margin: 2% 0 2% 0; }
+.tti-checkbox label { font-weight: normal; margin: 0 0 0 2%; }

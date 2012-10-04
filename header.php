@@ -19,9 +19,8 @@
   <!--[if lt IE 9]>
   <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
   <![endif]-->
-  
-  <meta charset="utf-8">
-  <title><?php echo apply_filters('wp_title','Coupon System'); ?></title>
+    <meta charset="utf-8">
+  <title><?php echo apply_filters('wp_title','ZimZam'); ?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="">
   <meta name="author" content="">
@@ -46,16 +45,15 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="#">Coupon Book</a>
+          <a class="brand" href="#">ZimZam</a>
           <div class="nav-collapse collapse">
             <p class="navbar-text pull-right">
               Logged in as <a href="#" class="navbar-link">Username</a>
             </p>
             <ul class="nav">
               <li><a href="<?php bloginfo('url'); ?>">Home</a></li>
-              <li><a href="<?php bloginfo('url'); ?>/pricing">Pricing</a></li>
-              <li><a href="/admin/new-coupon">Admin: New coupon</a></li>
-              <li><a href="/admin/new-vendor">Admin: New vendor</a></li>
+              <li><a href="<?php bloginfo('url'); ?>/stub">Stub</a></li>
+              <li><a href="https://github.com/chrisbratlien/zim-zam"><img width="20px" src="<?php bloginfo('template_url'); ?>/images/github-logo.png" /></a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div>

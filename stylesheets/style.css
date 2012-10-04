@@ -7,3 +7,7 @@ body.new-coupon textarea { width: 50%; height: 5em; }
 body.new-vendor #vendors table td img { width: 80px; }
 
 body.home #results table td img { width: 80px; }
+
+
+.zigzag { width: 20px; }
+.concept-list { list-style-type: none; }

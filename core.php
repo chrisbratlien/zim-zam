@@ -20,17 +20,23 @@ function clean_uri($uri) {
 
 
 
-function require_authentication() {
+function is_logged_in() {
+  return array_key_exists('username',$_SESSION);  
+}
 
-  $username = false;  
-  if (array_key_exists('username',$_SESSION)) {
-    $username = $_SESSION['username'];
-  }
-  if (empty($username)) {
-    require_once('login.php');
-    return null;
+
+function require_authentication() {
+  if (!is_logged_in()) {
+  
+    if (credentials_authenticate($_POST)) {
+      $_SESSION['username'] = $_POST['username'];  
+    }
+    else {
+      show_login_form();
+    }
   }
 }
+
 
 
 function route($uri) {
@@ -84,7 +90,26 @@ function route($uri) {
       ///break;
     }
   }
-  require_once('404.php');
+  
+  
+  
+  $routes = Array(
+    Array('pattern' => '/\/concept\/(\d+)$/', 'file' => 'concept', 'var' => 'id')
+  
+  );
+  
+  
+  
+  if (preg_match('/\/concept\/(\d+)$/',$uri,$matches)) {
+      ////print_r($matches);
+      /////die('ok');
+      $concept_id = $matches[1];
+      require_once('concept.php');
+  }
+  else {
+    require_once('404.php');
+  }  
+  
 }
 
 

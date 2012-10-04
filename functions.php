@@ -8,6 +8,8 @@ require_once 'local.php';
 require_once 'core.php';
 require_once 'class.phpmailer.php';
 
+
+
 if (!function_exists('pp')) { //Pretty Print
   function pp($obj,$label = '') {  
     $data = json_encode(print_r($obj,true));
@@ -52,6 +54,150 @@ if (!function_exists('pp')) { //Pretty Print
     <?php
   }
 }
+
+function echo_if($cond,$str) {
+  if ($cond) {
+    echo $str;
+  }
+}
+
+
+function is_language_known() {
+  return array_key_exists('language',$_SESSION);  
+}
+
+
+function require_language() {
+
+  if (!is_language_known()) {
+  
+    if (!empty($_POST)) {
+      $_SESSION['language'] = $_POST['language'];  
+    }
+    else {
+      show_language_form();
+      exit;
+    }
+  }
+}
+
+
+
+function show_language_form() {  
+?>
+<form method="post" autocomplete="off">
+    <select id="language-picker" name="language">
+      <option <?php echo_if($_SESSION['language'] == 1,'selected="selected"'); ?> value="1">English</option>
+      <option <?php echo_if($_SESSION['language'] == 2,'selected="selected"'); ?> value="2">Norwegian (bokmaal)</option>
+      <option <?php echo_if($_SESSION['language'] == 3,'selected="selected"'); ?> value="3">Norwegian (nynorsk)</option>
+    </select>
+    <script type="text/javascript">
+      jQuery('#language-picker').change(function() { jQuery(this).parent().submit(); });    
+    </script>
+</form>
+<?php
+}
+
+
+
+
+function translate_concept($id,$language) {
+  $sql = sprintf('SELECT * FROM zam WHERE receiver = %d AND message = %d',$id,$language);
+
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row->response);
+	}  
+  return $result;
+}
+
+
+function translate_zim_receiver($zim,$language) {
+  return translate_concept($zim->receiver,$language);
+}
+function translate_zim_message($zim,$language) {
+  return translate_concept($zim->message,$language);
+}
+function translate_zim_response($zim,$language) {
+  return translate_concept($zim->response,$language);
+}
+
+
+function get_zims_with_response($id) {
+  $sql = sprintf('SELECT * FROM zim WHERE response = %d',$id);
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row);
+	}  
+  return $result;
+}
+
+function get_zims_with_message($id) {
+  $sql = sprintf('SELECT * FROM zim WHERE message = %d',$id);
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row);
+	}  
+  return $result;
+}
+
+function get_zims_with_receiver($id) {
+  $sql = sprintf('SELECT * FROM zim WHERE receiver = %d',$id);
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row);
+	}  
+  return $result;
+}
+
+function get_zims_involving($id) {
+  $sql = sprintf('SELECT * FROM zim WHERE (receiver = %d) OR (message = %d) OR (response = %d)',$id,$id,$id);
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row);
+	}  
+  return $result;
+}
+
+function get_all_zims() {
+  $sql = sprintf('SELECT * FROM zim');
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row);
+	}  
+  return $result;
+}
+
+
+function concept_url($id) {
+  return sprintf('%s/concept/%d',get_bloginfo('url'),$id);
+}
+
+function linkify_concept($id,$lang) {
+  $trans = translate_concept($id,$lang);
+  if (empty($trans)) {
+    return sprintf('<a href="%s"><img class="zigzag" src="%s/images/zigzag-line7.gif" /></a>',concept_url($id),get_bloginfo('template_url'));
+  }
+  return sprintf('<a href="%s">%s</a>',concept_url($id),array_shift($trans));
+}
+
+function linkify_zim($zim,$lang) {
+  return sprintf('%s <- %s => %s',
+    linkify_concept($zim->receiver,$lang),
+    linkify_concept($zim->message,$lang),
+    linkify_concept($zim->response,$lang)    
+  );
+}
+
+
+
+
 
 
 function tags_for_coupon_id($coupon_id) {

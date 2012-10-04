@@ -1,18 +1,38 @@
 <?php 
 
+
+if (!empty($_POST) && array_key_exists('language',$_POST)) {
+  $lang = $_POST['language'];
+  $_SESSION['language'] = $lang;
+}
+
+
 add_filter('body_class',function($classes) {
   $classes[] = 'home';
   return $classes;
 });
-get_header(); ?>
+
+get_header(); 
+
+require_language();
+$lang = $_SESSION['language'];
+
+?>
     <div class="container-fluid">
       <div class="row-fluid">
         <div class="span3">
           <?php get_sidebar(); ?>          
         </div><!--/span-->
         <div class="span9">
+          <?php show_language_form(); ?>        
           <div class="hero-unit">
-            <input type="text" id="tags" /><a class="btn btn-primary btn-large" id="search-button">Search</a>
+            <?php
+              echo '<ul class="concept-list">';
+              foreach(get_all_zims() as $zim) {
+                echo sprintf('<li>%s</li>',linkify_zim($zim,$lang));
+              }
+              echo "</ul>";
+            ?>
             <div id="results"></div>
           </div><!-- hero-unit -->       
         </div><!-- span -->

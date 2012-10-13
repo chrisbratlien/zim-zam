@@ -20,9 +20,6 @@ $lang = $_SESSION['language'];
 ?>
     <div class="container-fluid">
       <div class="row-fluid">
-        <div class="span3">
-          <?php get_sidebar(); ?>          
-        </div><!--/span-->
         <div class="span9">
           <?php show_language_form(); ?>        
           <div class="hero-unit">
@@ -30,6 +27,10 @@ $lang = $_SESSION['language'];
               echo '<ul class="concept-list">';
               foreach(get_all_zims() as $zim) {
                 echo sprintf('<li>%s</li>',linkify_zim($zim,$lang));
+              }
+              foreach(get_all_zams() as $zam) {
+                //////pp($zim,'zim');
+                echo sprintf('<li>%s</li>',linkify_zam($zam,$lang));                
               }
               echo "</ul>";
             ?>

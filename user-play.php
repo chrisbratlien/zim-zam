@@ -13,7 +13,13 @@ add_filter('body_class',function($classes) {
 });
 
 
+
+if (empty($concept_id)) { $concept_id = $_GET['id']; }
+
 add_action('wp_footer',function() use($lang,$concept_id) {
+
+
+
 
 ?>
 <script type="text/javascript">

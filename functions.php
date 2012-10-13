@@ -175,6 +175,39 @@ function get_all_zims() {
 }
 
 
+/* ZAM */
+
+function get_all_zams() {
+  $sql = sprintf('SELECT * FROM zam');
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row);
+	}  
+  return $result;
+}
+
+function get_zams_with_message($id) {
+  $sql = sprintf('SELECT * FROM zam WHERE message = %d',$id);
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row);
+	}  
+  return $result;
+}
+
+
+function get_zams_involving($id) {
+  $sql = sprintf('SELECT * FROM zam WHERE (receiver = %d) OR (message = %d) ',$id,$id);
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row);
+	}  
+  return $result;
+}
+
 function concept_url($id) {
   return sprintf('%s/concept/%d',get_bloginfo('url'),$id);
 }
@@ -195,8 +228,98 @@ function linkify_zim($zim,$lang) {
   );
 }
 
+function linkify_zam($zam,$lang) {
+  return sprintf('%s <- %s => %s',
+    linkify_concept($zam->receiver,$lang),
+    linkify_concept($zam->message,$lang),
+    $zam->response    
+  );
+}
 
 
+function new_concept() {
+  $sql = "INSERT INTO `concepts` (`concept_id`) VALUES (NULL);";
+  $q = mysql_query($sql);
+  $concept_id = mysql_insert_id();
+  return $concept_id;
+}
+
+function new_zam($opts) {
+  
+  $zam_receiver = $opts['receiver'];
+  $zam_message = $opts['message'];
+  $zam_response = $opts['response'];
+  preg_match('/^\d+$/',$zam_message) and preg_match('/^\d+$/',$zam_receiver) or die('zam not numeric');
+
+  $sql = sprintf("INSERT INTO `zam` (receiver,message,response) VALUES (%d,%d,'%s')",
+    $zam_receiver,
+    $zam_message,
+    mysql_escape_string($zam_response)
+  );
+  $q = mysql_query($sql);
+  $zam_id = mysql_insert_id();
+  return $zam_id;
+}
+
+
+function new_concept_and_zam($opts) {
+  $concept_id = new_concept();
+  $opts['receiver'] = $concept_id;
+  $zam_id = new_zam($opts);
+  return $concept_id;   
+}
+
+
+function new_zim($opts) {
+  
+  $zim_receiver = $opts['receiver'];
+  $zim_message = $opts['message'];
+  $zim_response = $opts['response'];
+  preg_match('/^\d+$/',$zim_message) and preg_match('/^\d+$/',$zim_receiver) or die('zim not numeric');
+
+  $sql = sprintf("INSERT INTO `zim` (receiver,message,response) VALUES (%d,%d,%d)",
+    $zim_receiver,
+    $zim_message,
+    $zim_response
+  );
+  $q = mysql_query($sql);
+  $zim_id = mysql_insert_id();
+  return $zim_id;
+}
+
+
+
+
+add_action('ws_new_concept',function($opts){  
+  $result = new_concept();
+  echo $result;
+  exit;
+});
+
+add_action('ws_new_zam',function($opts){  
+  $result = new_zam($opts);
+  echo $result;
+  exit;
+});
+
+add_action('ws_new_concept_and_zam',function($opts){  
+  $result = new_concept_and_zam($opts);
+  echo $result;
+  exit;
+});
+
+
+add_action('ws_new_zim',function($opts){  
+  $result = new_zim($opts);
+  echo $result;
+  exit;
+});
+
+
+
+
+
+/** BOILERPLATE ***********************************************/
 
 
 

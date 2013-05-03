@@ -32,7 +32,8 @@
   <script src="<?php bloginfo('template_url'); ?>/javascripts/string.supplant.js"></script>
   <script src="<?php bloginfo('template_url'); ?>/lib/bootstrap/js/bootstrap.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/dom.js"></script>  
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/dibs.js"></script>  
+  <script type="text/javascript" src="<?php bloginfo('template_url'); ?>/javascripts/zz.js"></script>
+
   <?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>
@@ -45,14 +46,12 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="#">ZimZam</a>
+          <a class="brand" href="<?php bloginfo('url'); ?>">ZimZam</a>
           <div class="nav-collapse collapse">
             <p class="navbar-text pull-right">
               Logged in as <a href="#" class="navbar-link">Username</a>
             </p>
             <ul class="nav">
-              <li><a href="<?php bloginfo('url'); ?>">Home</a></li>
-              <li><a href="<?php bloginfo('url'); ?>/stub">Stub</a></li>
               <li><a href="https://github.com/chrisbratlien/zim-zam"><img width="20px" src="<?php bloginfo('template_url'); ?>/images/github-logo.png" /></a></li>
             </ul>
           </div><!--/.nav-collapse -->

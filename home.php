@@ -7,15 +7,46 @@ if (!empty($_POST) && array_key_exists('language',$_POST)) {
 }
 
 
+require_language();
+$lang = $_SESSION['language'];
+
+
+
+
 add_filter('body_class',function($classes) {
   $classes[] = 'home';
   return $classes;
 });
 
+
+
+
+add_action('wp_footer',function() use($lang) {
+?>
+
+<script type="text/javascript">
+
+  ZZ.lang = <?php echo $lang; ?>;
+
+  jQuery(document).ready(function() {
+    var newForm = ZZ.Widgets.NewConceptForm({
+      lang: <?php echo $lang; ?>,
+      langText: '<?php echo array_shift(translate_concept($lang,$lang)); ?>'
+    });  
+    var newFormWrap = jQuery('#new-concept-wrap');
+    newForm.renderOn(newFormWrap);
+  });
+</script>
+<?php
+});
+
+
+
+
 get_header(); 
 
-require_language();
-$lang = $_SESSION['language'];
+
+///pp($lang,'lang');
 
 ?>
     <div class="container-fluid">
@@ -23,18 +54,21 @@ $lang = $_SESSION['language'];
         <div class="span9">
           <?php show_language_form(); ?>        
           <div class="hero-unit">
-            <?php
-              echo '<ul class="concept-list">';
-              foreach(get_all_zims() as $zim) {
-                echo sprintf('<li>%s</li>',linkify_zim($zim,$lang));
-              }
-              foreach(get_all_zams() as $zam) {
-                //////pp($zim,'zim');
-                echo sprintf('<li>%s</li>',linkify_zam($zam,$lang));                
-              }
-              echo "</ul>";
-            ?>
-            <div id="results"></div>
+            <table class="table table-striped table-bordered table-condensed">
+              <tr><th>receiver</th><th>message</th><th>response</th></tr>
+              <?php
+                foreach(get_all_zims() as $zim) {
+                  echo sprintf('%s',linkify_zim_for_table($zim,$lang));
+                }
+                foreach(get_all_zams() as $zam) {
+                  //////pp($zim,'zim');
+                  echo sprintf('%s',linkify_zam_for_table($zam,$lang));
+                }
+              ?>
+            </table>
+            <div id="results"></div>            
+            <?php do_action('new_concept_form',$lang); ?>
+            
           </div><!-- hero-unit -->       
         </div><!-- span -->
       </div><!-- rowfluid -->
@@ -45,67 +79,4 @@ $lang = $_SESSION['language'];
       </footer>
 
     </div><!--/.fluid-container-->
-<script type="text/javascript">
-
-
-  function couponSearch(tags) {
-    var resultsDiv = jQuery('#results');
-    resultsDiv.empty();
-
-
-    jQuery.ajax({
-      url: '/ws',
-      data: { 
-        action: 'tag_search', 
-        "tags": tags
-      },
-      success: function(response) {
-      
-        var results = eval('(' + response + ')');
-        console.log('results',results);
-        
-        var table = DOM.table();
-        results.each(function(result) {
-          var tr = DOM.tr();
-
-
-          var imageUrl = '/images/fs.jpg';
-          if (result.logo.length > 0) {
-            imageUrl = '/data/' + result.logo;
-          }
-
-          tr.append(DOM.td(DOM.image().attr('src',imageUrl)));
-          tr.append(DOM.td(result.Vendor_Name));
-          tr.append(DOM.td(result.item));
-          tr.append(DOM.td(result.details));
-          table.append(tr);
-        });
-        
-        resultsDiv.append(table);
-      
-        //////console.log('resp',resp);
-      }
-    });
-    
-  }
-    
-  function searchInputtedTags() {
-    var tags = jQuery('#tags').val().split(/\ +/g);
-    couponSearch(tags);      
-  }
-
-  jQuery(document).ready(function() {
-  
-    jQuery('#search-button').click(searchInputtedTags);
-    jQuery('#tags').blur(searchInputtedTags);  
-    jQuery('#tags').keypress(function(event) {
-      if (event.keyCode == 13) { //return/enter
-        searchInputtedTags();  
-      }
-    });
-  });
-
-
-
-</script>
 <?php get_footer(); ?>

@@ -1,5 +1,9 @@
 <?php
 
+require_once('class.Concept.php');
+require_once('class.Zim.php');
+
+
 $lang = $_SESSION['language'];
 
 if (!empty($_POST) && array_key_exists('language',$_POST)) {
@@ -13,84 +17,62 @@ add_filter('body_class',function($classes) {
 });
 
 
-add_action('wp_footer',function() use($lang,$concept_id) {
 
+
+
+
+
+/*
+foreach(get_zims_involving($concept_id) as $spec) {
+  $zim = new Zim($spec);
+  pp($zim,'zee zim');
+}
+*/
+
+
+//pp(ZimCollection::from_specs(get_zims_involving($concept_id)),'ZimColl?');
+///$all = ZimCollection::all();
+/////pp(count($all),'count of all');
+///pp($first,'first?');
+
+///$sub = $all->involving_concept_id($concept_id);
+//pp(count($sub),'count of subset');
+////pp($sub,'subset');
+
+/** CONCEPT OBJECT TEST
+$in_english = new Concept(1);
+$orange_fruit = new Concept(18);
+$color = new Concept(19);
+
+$responses = $orange_fruit->concept_responses_to_concept($color);
+//pp($responses,'responses to: orange fruit x color');
+
+foreach($responses as $concept) {
+  $text_responses = $concept->text_responses_to_concept($in_english);
+  pp(array_shift($text_responses),'in english');
+  //pp($concept->text_responses_to_concept($in_english),'text responses');
+}
+***/
+
+$concept = new Concept($concept_id);
+
+pp($concept,'concept');
+
+pp($concept->url(),'url');
+
+
+
+
+
+
+add_action('wp_footer',function() use($lang,$concept_id) {
 ?>
+
 <script type="text/javascript">
 
-  var ZZ = {};
-  
   ZZ.lang = <?php echo $lang; ?>;
   ZZ.conceptID = <?php echo $concept_id; ?>
 
-  function newZam(spec,callback) {
-  
-    jQuery.ajax({
-      url: '/ws',
-      data: { 
-        action: 'new_zam', 
-        receiver: spec.receiver,
-        message: spec.message,
-        response: spec.response
-      },
-      success: callback
-    });
-  }   
-  function newConceptAndZam(spec,callback) {  
-    jQuery.ajax({
-      url: '/ws',
-      data: { 
-        action: 'new_concept_and_zam', 
-        ////won't need to supply receiver,the new concept receives the message
-        message: spec.message,
-        response: spec.response
-      },
-      success: callback
-    });
-  }   
-  
-  function newZim(spec,callback) {
-  
-    jQuery.ajax({
-      url: '/ws',
-      data: { 
-        action: 'new_zim', 
-        receiver: spec.receiver,
-        message: spec.message,
-        response: spec.response
-      },
-      success: callback
-    });
-  }   
-  
-  
-  
-   
-   /*   
-        var results = eval('(' + response + ')');
-        console.log('results',results);
-        
-        var table = DOM.table();
-        results.each(function(result) {
-          var tr = DOM.tr();
-
-
-          var imageUrl = '/images/fs.jpg';
-          if (result.logo.length > 0) {
-            imageUrl = '/data/' + result.logo;
-          }
-
-          tr.append(DOM.td(DOM.image().attr('src',imageUrl)));
-          tr.append(DOM.td(result.Vendor_Name));
-          tr.append(DOM.td(result.item));
-          tr.append(DOM.td(result.details));
-          table.append(tr);
-        });
-        
-        resultsDiv.append(table);
-      
-        //////console.log('resp',resp);
-     */
 
 
   jQuery(document).ready(function() {
@@ -113,7 +95,22 @@ add_action('wp_footer',function() use($lang,$concept_id) {
           console.log('woo',id);
         });
       }    
+    
+      setTimeout(function(){
+        location.reload();
+      
+      },2000);
+    
+    
     });
+
+
+    var newForm = ZZ.Widgets.NewConceptForm({
+      lang: <?php echo $lang; ?>,
+      langText: '<?php echo array_shift(translate_concept($lang,$lang)); ?>'
+    });  
+    var newFormWrap = jQuery('#new-concept-wrap');
+    newForm.renderOn(newFormWrap);
     
   });
 
@@ -134,13 +131,11 @@ require_language();
         <div class="span9">
           <?php show_language_form(); ?>
           <div class="hero-unit">
+            <table class="table table-striped table-bordered table-condensed">
+            <tr><th>receiver (it)</th><th>message (when asked…)</th><th>response (responds with…)</th></tr>
             <?php
-            
-              echo '<ul class="concept-list">';
               foreach(get_zims_involving($concept_id) as $zim) {
-                //////pp($zim,'zim');
-                
-                echo sprintf('<li>%s</li>',linkify_zim($zim,$lang));
+                echo sprintf('%s',linkify_zim_for_table($zim,$lang));
                 
                 /***
                 echo sprintf('<li><a href="%s">%s</a> <a href="%s">%s</a> <a href="%s">%s</a></li>',
@@ -152,49 +147,51 @@ require_language();
               }
               foreach(get_zams_involving($concept_id) as $zam) {
                 //////pp($zim,'zim');
-                echo sprintf('<li>%s</li>',linkify_zam($zam,$lang));                
+                echo sprintf('%s',linkify_zam_for_table($zam,$lang));                
               }
-              echo "</ul>";
+              
             ?>
-            
-            <h2>Teach <?php echo linkify_concept($concept_id,$lang); ?> a trick</h2>
+            </table>
+            <h2>Train <?php echo linkify_concept($concept_id,$lang); ?> how to respond</h2>
             <div class="well">  
-   
-            <div class="control-group">  
-              <label class="control-label" for="select01">When asked (<?php echo array_shift(translate_concept($lang,$lang)); ?>)…</label>  
-              <div class="controls">  
-                <select id="message-select">
-                  <?php foreach(get_zams_with_message($lang) as $zam) {
-                      echo sprintf('<option value="%s">%s</option>',$zam->receiver,$zam->response);                            
-                  }
-                  ?>
-              </select>  
-              </div>  
-            </div>  
-
-            <label class="control-label" for="response-text">Respond with...
-              <input type="text" id="response-text" />
-            </label>  
-            <label class="control-label" for="response-id">OR better yet…
-              <select id="response-id">
-                <?php foreach(get_zams_with_message($lang) as $zam) {
-                    echo sprintf('<option value="%s">%s</option>',$zam->receiver,$zam->response);                            
-                }
-                ?>
-              </select>              
-            </label>  
-            <br/>
-            <button class="btn" id="submit">Submit</button>  
-            </div>  
+              <table class="table table-striped table-bordered table-condensed">
+                <tr><th>receiver</th><th>message</th><th>response</th></tr>
+                <tr>
+                  <td><?php echo linkify_concept($concept_id,$lang); ?></td>
+                  <td>
+                    <select id="message-select">
+                      <option value="">(choose)</option>
+                      <?php foreach(get_zams_with_message($lang) as $zam) {
+                          echo sprintf('<option value="%s">%s (%s)</option>',$zam->receiver,$zam->response,$zam->receiver);                            
+                      }
+                      ?>
+                    </select>  
+                  </td>
+                  <td>
+                    <select id="response-id">
+                      <option value="">(choose)</option>
+                      <?php foreach(get_zams_with_message($lang) as $zam) {
+                        //pp($zam,'zam');
+                          echo sprintf('<option value="%s">%s (%s)</option>',$zam->receiver,$zam->response,$zam->receiver);                            
+                      }
+                      ?>
+                    </select><br />
+                    or the text<br />
+                    <input type="text" id="response-text" /><br/>
+                    <button class="btn" id="submit">Submit</button>              
+                  </td>
+                </tr>
+              </table>
+            </div><!-- well -->
+            <?php ///do_action('obsoleted-----new_concept_form',$lang); ?>
+            <div id="new-concept-wrap"></div><!-- new-concept-wrap -->          
+  
           </div><!-- hero-unit -->       
         </div><!-- span -->
       </div><!-- rowfluid -->
       <hr>
-
       <footer>
         <p>&copy; Company 2012</p>
       </footer>
-
     </div><!--/.fluid-container-->
 <?php get_footer();
-

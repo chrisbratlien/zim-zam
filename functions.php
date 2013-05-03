@@ -17,8 +17,8 @@ if (!function_exists('pp')) { //Pretty Print
     <style type="text/css">
       #bsdLogger {
       position: absolute;
-      top: 0px;
-      right: 0px;
+      top: 90px;
+      right: 20px;
       border-left: 4px solid #bbb;
       padding: 6px;
       background: white;
@@ -67,6 +67,15 @@ function is_language_known() {
 }
 
 
+function current_language() {
+  if (!is_language_known()) {
+    return false;
+  }
+  return $_SESSION['language'];
+}
+
+
+
 function require_language() {
 
   if (!is_language_known()) {
@@ -84,23 +93,28 @@ function require_language() {
 
 
 function show_language_form() {  
+  $lang = current_language();
+  ////pp($lang,'lang');
 ?>
 <form method="post" autocomplete="off">
+    <label>Language
     <select id="language-picker" name="language">
-      <option <?php echo_if($_SESSION['language'] == 1,'selected="selected"'); ?> value="1">English</option>
-      <option <?php echo_if($_SESSION['language'] == 2,'selected="selected"'); ?> value="2">Norwegian (bokmaal)</option>
-      <option <?php echo_if($_SESSION['language'] == 3,'selected="selected"'); ?> value="3">Norwegian (nynorsk)</option>
+      <option <?php echo_if($lang == 1,'selected="selected"'); ?> value="1">English</option>
+      <option <?php echo_if($lang == 2,'selected="selected"'); ?> value="2">Norwegian (bokmaal)</option>
+      <option <?php echo_if($lang == 3,'selected="selected"'); ?> value="3">Norwegian (nynorsk)</option>
+      <option <?php echo_if($lang == 26,'selected="selected"'); ?> value="26">Spanish</option>
     </select>
+    </label>
     <script type="text/javascript">
-      jQuery('#language-picker').change(function() { jQuery(this).parent().submit(); });    
-    </script>
+      jQuery('#language-picker').change(function() { jQuery(this).parent().parent().submit(); });    
+    </script>    
 </form>
 <?php
 }
 
 
 
-
+/*
 function translate_concept($id,$language) {
   $sql = sprintf('SELECT * FROM zam WHERE receiver = %d AND message = %d',$id,$language);
 
@@ -111,7 +125,11 @@ function translate_concept($id,$language) {
 	}  
   return $result;
 }
+*/
 
+function translate_concept($concept_id,$language) {
+  return get_zam_responses($concept_id,$language);
+}
 
 function translate_zim_receiver($zim,$language) {
   return translate_concept($zim->receiver,$language);
@@ -122,6 +140,27 @@ function translate_zim_message($zim,$language) {
 function translate_zim_response($zim,$language) {
   return translate_concept($zim->response,$language);
 }
+
+function get_zims_where($wheres = Array()) {
+  $sql = sprintf('SELECT * FROM zim WHERE 1');
+  foreach($wheres as $w) {
+    $sql .= sprintf(' AND %s',$w);
+  }  
+  /**
+  pp($wheres,'wheres');
+  pp($sql,'sql');
+  exit;
+  **/
+  
+  
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row);
+	}  
+  return $result;
+}
+
 
 
 function get_zims_with_response($id) {
@@ -177,6 +216,20 @@ function get_all_zims() {
 
 /* ZAM */
 
+function get_zams_where($wheres = Array()) {
+  $sql = sprintf('SELECT * FROM zam WHERE 1');
+  foreach($wheres as $w) {
+    $sql .= sprintf(' AND %s',$w);
+  }  
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row);
+	}  
+  return $result;
+}
+
+
 function get_all_zams() {
   $sql = sprintf('SELECT * FROM zam');
 	$mysql_result = mysql_query($sql);	
@@ -196,6 +249,50 @@ function get_zams_with_message($id) {
 	}  
   return $result;
 }
+
+
+function get_zams_with_response($str) {
+  $sql = sprintf('SELECT * FROM zam WHERE response = "%s"',mysql_escape_string($str));
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,$row);
+	}  
+  return $result;
+}
+
+function get_zams_with_message_and_response($msg,$response) {
+  $zams = get_zams_where(Array(
+    sprintf('response = "%s"',$response),
+    sprintf('message = %d',$msg)));
+  return $zams;
+}
+
+function get_zams_with_receiver_and_message($recv,$msg) {
+  $zams = get_zams_where(Array(
+    sprintf('receiver = %d',$recv),
+    sprintf('message = %d',$msg)));
+  return $zams;
+}
+
+function get_zam_receivers($msg,$response) {
+  $receivers = array_map(function($zam) { return $zam->receiver; },get_zams_with_message_and_response($msg,$response));
+  return $receivers;
+}
+
+function get_first_zam_receiver($msg,$response) {
+  return array_shift(get_zam_receivers($msg,$response));
+}
+
+function get_zam_responses($recv,$msg) {
+  $responses = array_map(function($zam) { return $zam->response; },get_zams_with_receiver_and_message($recv,$msg));
+  return $responses;
+}
+
+function get_first_zam_response($recv,$msg) {
+  return array_shift(get_zam_responses($recv,$msg));
+}
+
 
 
 function get_zams_involving($id) {
@@ -220,6 +317,10 @@ function linkify_concept($id,$lang) {
   return sprintf('<a href="%s">%s</a>',concept_url($id),array_shift($trans));
 }
 
+
+
+
+
 function linkify_zim($zim,$lang) {
   return sprintf('%s <- %s => %s',
     linkify_concept($zim->receiver,$lang),
@@ -228,6 +329,19 @@ function linkify_zim($zim,$lang) {
   );
 }
 
+
+function linkify_zim_for_table($zim,$lang) {
+  return sprintf('<tr><td>%s</td><td>%s</td><td>%s</td></tr>',
+    linkify_concept($zim->receiver,$lang),
+    linkify_concept($zim->message,$lang),
+    linkify_concept($zim->response,$lang)    
+  );
+}
+
+
+
+
+
 function linkify_zam($zam,$lang) {
   return sprintf('%s <- %s => %s',
     linkify_concept($zam->receiver,$lang),
@@ -235,6 +349,15 @@ function linkify_zam($zam,$lang) {
     $zam->response    
   );
 }
+
+function linkify_zam_for_table($zam,$lang) {
+  return sprintf('<tr><td>%s</td><td>%s</td><td>%s</td></tr>',
+    linkify_concept($zam->receiver,$lang),
+    linkify_concept($zam->message,$lang),
+    $zam->response    
+  );
+}
+
 
 
 function new_concept() {
@@ -556,6 +679,36 @@ add_action('ws_get_vendor_logo_from_url',function($opts) {
   exit;
 });
 
+
+
+
+add_action('new_concept_form',function($lang){
+?>
+  <div class="well">
+    <label class="control-label" for="new-concept-response-text">Create the concept of 
+      <input type="text" id="new-concept-response-text" /> (<?php echo array_shift(translate_concept($lang,$lang)); ?>)
+    </label>  
+    <br/>
+    <button class="btn btn-primary" id="new-concept-submit">Create Concept</button>  
+    <span id="new-concept-submission-response"></span>
+  </div><!-- well -->
+<script type="text/javascript">
+  ZZ.lang = <?php echo $lang; ?>;
+  jQuery(document).ready(function() {
+    jQuery('#new-concept-submit').click(function() {
+      var responseText = jQuery('#new-concept-response-text').val();        
+      if (responseText.length > 0) {
+        newConceptAndZam({ message: ZZ.lang, response: responseText },function(id) { 
+        //newZam({ receiver: ZZ.conceptID, message: message, response: responseText },function(id) {
+          /////console.log('wooo',id);
+          jQuery('#new-concept-submission-response').append(DOM.a().attr('href','/concept/' + id).html(responseText));
+        });
+      }
+    });
+  });
+</script>
+<?php
+});
 
 
 

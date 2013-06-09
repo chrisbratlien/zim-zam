@@ -53,7 +53,7 @@ class Concept {
   function url() {
     return sprintf('%s/concept/%d',get_bloginfo('url'),$this->id);
   }
-
+  
   function concept_responses_to_concept($other) {
     //other must be a concept or an integer concept id
     //find zims where $other's id is the message, $this's id is the receiver
@@ -109,6 +109,5 @@ class Concept {
     }
     return $strings;
   }
-
-    
+       
 }

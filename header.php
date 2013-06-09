@@ -32,6 +32,10 @@
   <script src="<?php bloginfo('template_url'); ?>/javascripts/string.supplant.js"></script>
   <script src="<?php bloginfo('template_url'); ?>/lib/bootstrap/js/bootstrap.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/dom.js"></script>  
+ <script type="text/javascript">
+  if (typeof ZZ == "undefined") { var ZZ = {}; }
+  ZZ.baseURL = '<?php bloginfo('url'); ?>';
+ </script>
   <script type="text/javascript" src="<?php bloginfo('template_url'); ?>/javascripts/zz.js"></script>
 
   <?php wp_head(); ?>

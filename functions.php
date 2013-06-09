@@ -6,9 +6,8 @@ ini_set('display_errors',1);
 
 require_once 'local.php';
 require_once 'core.php';
+require_once 'class.Concept.php';
 require_once 'class.phpmailer.php';
-
-
 
 if (!function_exists('pp')) { //Pretty Print
   function pp($obj,$label = '') {  
@@ -359,12 +358,61 @@ function linkify_zam_for_table($zam,$lang) {
 }
 
 
+function linkify_zam_for_table_with_glyphs($zam,$lang) {
+  return sprintf('<tr><td>%s</td><td>%s</td><td>%s</td></tr>',
+    linkify_concept_with_glyphs($zam->receiver,$lang),
+    linkify_concept_with_glyphs($zam->message,$lang),
+    $zam->response    
+  );
+}
+
+
+//careful with these
+
+function glyph_urls($c) {
+  $glyph_url_concept = new Concept(get_first_zam_receiver(1,'glyph url'));
+  $glyph_urls = $c->text_responses_to_concept($glyph_url_concept);
+  return $glyph_urls;
+}
+
+function linkify_concept_with_glyphs($id,$lang) {
+  $trans = translate_concept($id,$lang);
+  if (empty($trans)) {
+    return sprintf('<a href="%s"><img class="zigzag" src="%s/images/zigzag-line7.gif" /></a>',concept_url($id),get_bloginfo('template_url'));
+  }
+
+  $r = '';  
+  $c = new Concept($id);
+  foreach (glyph_urls($c) as $url) {
+    $r .= sprintf('<img width="20px" src="%s" />',$url);
+  }
+
+    
+  
+  return sprintf('<a href="%s">%s %s</a>',concept_url($id),$r,array_shift($trans));
+}
+
+
+
+function linkify_zim_for_table_with_glyphs($zim,$lang) {
+  return sprintf('<tr><td>%s</td><td>%s</td><td>%s</td></tr>',
+    linkify_concept_with_glyphs($zim->receiver,$lang),
+    linkify_concept_with_glyphs($zim->message,$lang),
+    linkify_concept_with_glyphs($zim->response,$lang)    
+  );
+}
+
+
+
+
+
+
 
 function new_concept() {
   $sql = "INSERT INTO `concepts` (`concept_id`) VALUES (NULL);";
   $q = mysql_query($sql);
   $concept_id = mysql_insert_id();
-  return $concept_id;
+  return new Concept($concept_id);
 }
 
 function new_zam($opts) {
@@ -386,10 +434,10 @@ function new_zam($opts) {
 
 
 function new_concept_and_zam($opts) {
-  $concept_id = new_concept();
-  $opts['receiver'] = $concept_id;
+  $concept = new_concept();
+  $opts['receiver'] = $concept->id;
   $zam_id = new_zam($opts);
-  return $concept_id;   
+  return $concept;   
 }
 
 
@@ -415,7 +463,7 @@ function new_zim($opts) {
 
 add_action('ws_new_concept',function($opts){  
   $result = new_concept();
-  echo $result;
+  echo json_encode($result);
   exit;
 });
 
@@ -427,7 +475,7 @@ add_action('ws_new_zam',function($opts){
 
 add_action('ws_new_concept_and_zam',function($opts){  
   $result = new_concept_and_zam($opts);
-  echo $result;
+  echo json_encode($result);
   exit;
 });
 
@@ -742,4 +790,8 @@ function curl_get($url, array $get = array(), array $options = array())
     curl_close($ch);
     return $result;
 }
+
+
+
+
 

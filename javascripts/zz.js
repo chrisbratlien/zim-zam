@@ -1,9 +1,20 @@
 if (typeof ZZ == "undefined") { var ZZ = {}; }
 ZZ.Widgets = {};
 
+
+ZZ.Concept = function(spec) {
+  var self = spec;
+  self.spec = spec;
+  self.linkify = function() {
+    return ZZ.baseURL + '/concept/' + spec.id;
+  };  
+  return self;
+};
+
+
 ZZ.Widgets.NewConceptForm = function(spec) {
 
-  console.log('spec',spec);
+  //console.log('spec',spec);
 
   var self = {};
   
@@ -26,8 +37,11 @@ ZZ.Widgets.NewConceptForm = function(spec) {
     createButton.click(function() {
       var responseText = input.val();        
       if (responseText.length > 0) {
-        newConceptAndZam({ message: spec.lang, response: responseText },function(id) { 
-          responseSpan.append(DOM.a().attr('href','/concept/' + id).html(responseText));
+        newConceptAndZam({ message: spec.lang, response: responseText },function(o) { 
+        
+          console.log('got an Oh',o);
+        
+          responseSpan.append(DOM.a().attr('href','/concept/' + o.id).html(responseText));
         });
       }
     });
@@ -60,7 +74,21 @@ ZZ.Widgets.NewConceptForm = function(spec) {
         message: spec.message,
         response: spec.response
       },
-      success: callback
+      success: function(r) { 
+      
+        var o = eval('(' + r + ')');
+      
+        var result = ZZ.Concept(o);
+        
+        console.log('nzjanzja',o);
+        console.log('nzjanzjar',result);
+        callback(result);
+      
+        //callback(o);
+
+
+      
+      }
     });
   }   
   
@@ -77,6 +105,8 @@ ZZ.Widgets.NewConceptForm = function(spec) {
       success: callback
     });
   }
+  
+  
   
   
    

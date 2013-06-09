@@ -54,15 +54,15 @@ get_header();
         <div class="span9">
           <?php show_language_form(); ?>        
           <div class="hero-unit">
-            <table class="table table-striped table-bordered table-condensed">
+            <table class="table table-striped table-bordered table-condensed all-concepts">
               <tr><th>receiver</th><th>message</th><th>response</th></tr>
               <?php
                 foreach(get_all_zims() as $zim) {
-                  echo sprintf('%s',linkify_zim_for_table($zim,$lang));
+                  echo sprintf('%s',linkify_zim_for_table_with_glyphs($zim,$lang));
                 }
                 foreach(get_all_zams() as $zam) {
                   //////pp($zim,'zim');
-                  echo sprintf('%s',linkify_zam_for_table($zam,$lang));
+                  echo sprintf('%s',linkify_zam_for_table_with_glyphs($zam,$lang));
                 }
               ?>
             </table>

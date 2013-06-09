@@ -11,3 +11,6 @@ body.home #results table td img { width: 80px; }
 
 .zigzag { width: 20px; }
 .concept-list { list-style-type: none; }
+
+.involved-concepts th:nth-child(2) { width: 16%; }
+.all-concepts th:nth-child(2) { width: 16%; }

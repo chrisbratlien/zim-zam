@@ -19,9 +19,6 @@ add_filter('body_class',function($classes) {
 
 
 
-
-
-
 /*
 foreach(get_zims_involving($concept_id) as $spec) {
   $zim = new Zim($spec);
@@ -56,9 +53,7 @@ foreach($responses as $concept) {
 
 $concept = new Concept($concept_id);
 
-pp($concept,'concept');
 
-pp($concept->url(),'url');
 
 
 
@@ -71,7 +66,10 @@ add_action('wp_footer',function() use($lang,$concept_id) {
 <script type="text/javascript">
 
   ZZ.lang = <?php echo $lang; ?>;
-  ZZ.conceptID = <?php echo $concept_id; ?>
+  ZZ.conceptID = <?php echo $concept_id; ?>;
+
+  
+  ZZ.thisConcept = ZZ.Concept({ id: <?php echo $concept_id;?> });
 
 
 
@@ -128,14 +126,48 @@ require_language();
 ?>
     <div class="container-fluid">
       <div class="row-fluid">
-        <div class="span9">
+        <div class="span12">
           <?php show_language_form(); ?>
-          <div class="hero-unit">
-            <table class="table table-striped table-bordered table-condensed">
+
+
+<?php
+
+//pp($concept,'concept');
+
+//pp($concept->url(),'url');
+
+
+//$fug_ids = get_zam_receivers($lang,'glyph url');
+//$fug_id = get_first_zam_receiver($lang,'glyph url');
+//$fug = new Concept($fug_id);
+
+
+//$glyph_url_concept = new Concept(get_first_zam_receiver(1,'glyph url'));
+
+///pp($glyph_url_concept,'glyph url concept');
+
+
+////pp($concept->text_responses_to_concept($glyph_url_concept),'any glyphs?');
+
+
+//$glyph_urls = $concept->text_responses_to_concept($glyph_url_concept);
+
+////pp($glyph_urls,'urls');
+
+
+
+foreach(glyph_urls($concept) as $url) {
+  echo sprintf('<img width="200px" src="%s" />',$url);
+}
+
+?>
+
+
+            <table class="table table-striped table-bordered table-condensed involved-concepts">
             <tr><th>receiver (it)</th><th>message (when asked…)</th><th>response (responds with…)</th></tr>
             <?php
               foreach(get_zims_involving($concept_id) as $zim) {
-                echo sprintf('%s',linkify_zim_for_table($zim,$lang));
+                echo sprintf('%s',linkify_zim_for_table_with_glyphs($zim,$lang));
                 
                 /***
                 echo sprintf('<li><a href="%s">%s</a> <a href="%s">%s</a> <a href="%s">%s</a></li>',
@@ -147,7 +179,7 @@ require_language();
               }
               foreach(get_zams_involving($concept_id) as $zam) {
                 //////pp($zim,'zim');
-                echo sprintf('%s',linkify_zam_for_table($zam,$lang));                
+                echo sprintf('%s',linkify_zam_for_table_with_glyphs($zam,$lang));                
               }
               
             ?>
@@ -185,8 +217,6 @@ require_language();
             </div><!-- well -->
             <?php ///do_action('obsoleted-----new_concept_form',$lang); ?>
             <div id="new-concept-wrap"></div><!-- new-concept-wrap -->          
-  
-          </div><!-- hero-unit -->       
         </div><!-- span -->
       </div><!-- rowfluid -->
       <hr>

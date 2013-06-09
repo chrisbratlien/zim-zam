@@ -160,6 +160,15 @@ foreach(glyph_urls($concept) as $url) {
   echo sprintf('<img width="200px" src="%s" />',$url);
 }
 
+
+foreach(youtube_urls($concept) as $url) {
+  parse_str(parse_url($url, PHP_URL_QUERY), $vars);
+  ////pp($vars,'vars');
+  echo sprintf('<iframe width="560" height="315" frameborder="0" allowfullscreen="true" src="http://www.youtube.com/embed/%s" ></iframe>',$vars['v']);
+}
+
+
+
 ?>
 
 

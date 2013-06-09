@@ -375,6 +375,15 @@ function glyph_urls($c) {
   return $glyph_urls;
 }
 
+function youtube_urls($c) {
+  $glyph_url_concept = new Concept(get_first_zam_receiver(1,'youtube url'));
+  $glyph_urls = $c->text_responses_to_concept($glyph_url_concept);
+  return $glyph_urls;
+}
+
+
+
+
 function linkify_concept_with_glyphs($id,$lang) {
   $trans = translate_concept($id,$lang);
   if (empty($trans)) {

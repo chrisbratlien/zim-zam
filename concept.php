@@ -4,12 +4,17 @@ require_once('class.Concept.php');
 require_once('class.Zim.php');
 
 
+/**
+moved to underneath get_header()
+
 $lang = $_SESSION['language'];
 
 if (!empty($_POST) && array_key_exists('language',$_POST)) {
   $lang = $_POST['language'];
   $_SESSION['language'] = $lang;
 }
+***/
+
 
 add_filter('body_class',function($classes) {
   $classes[] = 'concept';
@@ -60,67 +65,9 @@ $concept = new Concept($concept_id);
 
 
 
-add_action('wp_footer',function() use($lang,$concept_id) {
-?>
-
-<script type="text/javascript">
-
-  ZZ.lang = <?php echo $lang; ?>;
-  ZZ.conceptID = <?php echo $concept_id; ?>;
-
-  
-  ZZ.thisConcept = ZZ.Concept({ id: <?php echo $concept_id;?> });
-
-
-
-  jQuery(document).ready(function() {
-
-    jQuery('#submit').click(function() {
-    
-      var message = jQuery('#message-select').val();
-      var responseText = jQuery('#response-text').val();
-      var responseID = jQuery('#response-id').val();
-    
-    
-      if (responseText.length > 0) {
-        //newConceptAndZam({ message: 1, response: 'All of Me' },function(r) { console.log(r); })
-        newZam({ receiver: ZZ.conceptID, message: message, response: responseText },function(id) {
-          console.log('wooo',id);
-        });
-      }
-      else {
-        newZim({ receiver: ZZ.conceptID, message: message, response: responseID },function(id) {
-          console.log('woo',id);
-        });
-      }    
-    
-      setTimeout(function(){
-        location.reload();
-      
-      },2000);
-    
-    
-    });
-
-
-    var newForm = ZZ.Widgets.NewConceptForm({
-      lang: <?php echo $lang; ?>,
-      langText: '<?php echo array_shift(translate_concept($lang,$lang)); ?>'
-    });  
-    var newFormWrap = jQuery('#new-concept-wrap');
-    newForm.renderOn(newFormWrap);
-    
-  });
-
-
-</script>
-<?php
-});
-
-
-get_header();
-
+get_header(); 
 require_language();
+$lang = current_language();
 
 
 ?>
@@ -168,31 +115,12 @@ foreach(youtube_urls($concept) as $url) {
 }
 
 
-
 ?>
 
-
-            <table class="table table-striped table-bordered table-condensed involved-concepts">
-            <tr><th>receiver (it)</th><th>message (when asked…)</th><th>response (responds with…)</th></tr>
-            <?php
-              foreach(get_zims_involving($concept_id) as $zim) {
-                echo sprintf('%s',linkify_zim_for_table_with_glyphs($zim,$lang));
-                
-                /***
-                echo sprintf('<li><a href="%s">%s</a> <a href="%s">%s</a> <a href="%s">%s</a></li>',
-                  concept_url($zim->receiver),array_shift(translate_zim_receiver($zim,$lang)),
-                  concept_url($zim->message),array_shift(translate_zim_message($zim,$lang)),
-                  concept_url($zim->response),array_shift(translate_zim_response($zim,$lang))
-                );
-                ***/
-              }
-              foreach(get_zams_involving($concept_id) as $zam) {
-                //////pp($zim,'zim');
-                echo sprintf('%s',linkify_zam_for_table_with_glyphs($zam,$lang));                
-              }
-              
-            ?>
-            </table>
+  <div id="my-involved-wrap">  
+  </div><!-- my-involved-wrap -->
+            
+            
             <h2>Train <?php echo linkify_concept($concept_id,$lang); ?> how to respond</h2>
             <div class="well">  
               <table class="table table-striped table-bordered table-condensed">
@@ -233,4 +161,64 @@ foreach(youtube_urls($concept) as $url) {
         <p>&copy; Company 2012</p>
       </footer>
     </div><!--/.fluid-container-->
-<?php get_footer();
+<?php 
+
+add_action('wp_footer',function() use($lang,$concept_id) {
+?>
+<script type="text/javascript">
+  ZZ.lang = <?php echo $lang; ?>;
+  ZZ.langConcept = ZZ.Concept({ id: ZZ.lang });
+  
+  
+  ZZ.conceptID = <?php echo $concept_id; ?>;
+  ZZ.thisConcept = ZZ.Concept({ id: <?php echo $concept_id;?> });
+
+  jQuery(document).ready(function() {
+
+    jQuery('#submit').click(function() {
+    
+      var message = jQuery('#message-select').val();
+      var responseText = jQuery('#response-text').val();
+      var responseID = jQuery('#response-id').val();
+    
+    
+      if (responseText.length > 0) {
+        //newConceptAndZam({ message: 1, response: 'All of Me' },function(r) { console.log(r); })
+        newZam({ receiver: ZZ.conceptID, message: message, response: responseText },function(id) {
+          //console.log('wooo',id);
+        });
+      }
+      else {
+        newZim({ receiver: ZZ.conceptID, message: message, response: responseID },function(id) {
+          //console.log('woo',id);
+        });
+      }    
+    
+      setTimeout(function(){
+        location.reload();
+      
+      },2000);
+    
+    
+    });
+
+
+    var newForm = ZZ.Widgets.NewConceptForm({
+      lang: <?php echo $lang; ?>,
+      langText: '<?php echo array_shift(translate_concept($lang,$lang)); ?>'
+    });  
+    var newFormWrap = jQuery('#new-concept-wrap');
+    newForm.renderOn(newFormWrap);
+
+    var myWrap = jQuery('#my-involved-wrap');
+    var involvedList = ZZ.Widgets.Involved({ concept: ZZ.thisConcept });
+    involvedList.renderOn(myWrap);
+
+  });
+
+
+</script>
+<?php
+});
+
+get_footer();

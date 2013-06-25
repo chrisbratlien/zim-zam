@@ -68,7 +68,11 @@ class Zim {
       $this->spec->message == $id || 
       $this->spec->response == $id
     );
-  }
+  }  
+  
+  
+  
+  
   
   function foo() {
   

@@ -105,7 +105,7 @@ class Concept {
     
     $strings = Array();
     foreach($set as $zam_spec) {
-      array_push($strings,$zam_spec->response);
+      array_push($strings,$zam_spec->spec->response);
     }
     return $strings;
   }

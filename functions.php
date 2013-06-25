@@ -7,6 +7,8 @@ ini_set('display_errors',1);
 require_once 'local.php';
 require_once 'core.php';
 require_once 'class.Concept.php';
+require_once 'class.Zim.php';
+require_once 'class.Zam.php';
 require_once 'class.phpmailer.php';
 
 if (!function_exists('pp')) { //Pretty Print
@@ -76,16 +78,13 @@ function current_language() {
 
 
 function require_language() {
-
-  if (!is_language_known()) {
-  
     if (!empty($_POST)) {
       $_SESSION['language'] = $_POST['language'];  
     }
-    else {
+
+  if (!is_language_known()) {
       show_language_form();
       exit;
-    }
   }
 }
 
@@ -98,6 +97,7 @@ function show_language_form() {
 <form method="post" autocomplete="off">
     <label>Language
     <select id="language-picker" name="language">
+      <option value="">(choose)</option>
       <option <?php echo_if($lang == 1,'selected="selected"'); ?> value="1">English</option>
       <option <?php echo_if($lang == 2,'selected="selected"'); ?> value="2">Norwegian (bokmaal)</option>
       <option <?php echo_if($lang == 3,'selected="selected"'); ?> value="3">Norwegian (nynorsk)</option>
@@ -105,7 +105,10 @@ function show_language_form() {
     </select>
     </label>
     <script type="text/javascript">
-      jQuery('#language-picker').change(function() { jQuery(this).parent().parent().submit(); });    
+      jQuery('#language-picker').change(function() { 
+        console.log('hhasfdadsf');
+        jQuery(this).parents('form').submit();
+      });    
     </script>    
 </form>
 <?php
@@ -155,7 +158,7 @@ function get_zims_where($wheres = Array()) {
 	$mysql_result = mysql_query($sql);	
   $result = array();
 	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row);
+		array_push($result,new Zim($row));
 	}  
   return $result;
 }
@@ -197,7 +200,7 @@ function get_zims_involving($id) {
 	$mysql_result = mysql_query($sql);	
   $result = array();
 	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row);
+		array_push($result,new Zim($row));
 	}  
   return $result;
 }
@@ -223,7 +226,7 @@ function get_zams_where($wheres = Array()) {
 	$mysql_result = mysql_query($sql);	
   $result = array();
 	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row);
+		array_push($result,new Zam($row));
 	}  
   return $result;
 }
@@ -262,7 +265,7 @@ function get_zams_with_response($str) {
 
 function get_zams_with_message_and_response($msg,$response) {
   $zams = get_zams_where(Array(
-    sprintf('response = "%s"',$response),
+    sprintf('response = "%s"',mysql_escape_string($response)),
     sprintf('message = %d',$msg)));
   return $zams;
 }
@@ -275,7 +278,7 @@ function get_zams_with_receiver_and_message($recv,$msg) {
 }
 
 function get_zam_receivers($msg,$response) {
-  $receivers = array_map(function($zam) { return $zam->receiver; },get_zams_with_message_and_response($msg,$response));
+  $receivers = array_map(function($zam) { return $zam->spec->receiver; },get_zams_with_message_and_response($msg,$response));
   return $receivers;
 }
 
@@ -284,7 +287,7 @@ function get_first_zam_receiver($msg,$response) {
 }
 
 function get_zam_responses($recv,$msg) {
-  $responses = array_map(function($zam) { return $zam->response; },get_zams_with_receiver_and_message($recv,$msg));
+  $responses = array_map(function($zam) { return $zam->spec->response; },get_zams_with_receiver_and_message($recv,$msg));
   return $responses;
 }
 
@@ -299,10 +302,35 @@ function get_zams_involving($id) {
 	$mysql_result = mysql_query($sql);	
   $result = array();
 	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row);
+		array_push($result,new Zam($row));
 	}  
   return $result;
 }
+
+function batch_get_zams_involving($comma_separated_ids) {
+
+  $sql = sprintf('SELECT * FROM zam WHERE receiver IN (%s) OR message IN (%s) ',$comma_separated_ids,$comma_separated_ids);
+  
+  //print_r($sql);
+  //exit;  
+	$mysql_result = mysql_query($sql);	
+  $result = array();
+	while ($row = mysql_fetch_object($mysql_result)) {
+		array_push($result,new Zam($row));
+	}  
+  return $result;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 function concept_url($id) {
   return sprintf('%s/concept/%d',get_bloginfo('url'),$id);
@@ -359,10 +387,13 @@ function linkify_zam_for_table($zam,$lang) {
 
 
 function linkify_zam_for_table_with_glyphs($zam,$lang) {
+  ////pp($zam,'zammy');
+
+
   return sprintf('<tr><td>%s</td><td>%s</td><td>%s</td></tr>',
-    linkify_concept_with_glyphs($zam->receiver,$lang),
-    linkify_concept_with_glyphs($zam->message,$lang),
-    $zam->response    
+    linkify_concept_with_glyphs($zam->spec->receiver,$lang),
+    linkify_concept_with_glyphs($zam->spec->message,$lang),
+    $zam->spec->response    
   );
 }
 
@@ -405,9 +436,9 @@ function linkify_concept_with_glyphs($id,$lang) {
 
 function linkify_zim_for_table_with_glyphs($zim,$lang) {
   return sprintf('<tr><td>%s</td><td>%s</td><td>%s</td></tr>',
-    linkify_concept_with_glyphs($zim->receiver,$lang),
-    linkify_concept_with_glyphs($zim->message,$lang),
-    linkify_concept_with_glyphs($zim->response,$lang)    
+    linkify_concept_with_glyphs($zim->spec->receiver,$lang),
+    linkify_concept_with_glyphs($zim->spec->message,$lang),
+    linkify_concept_with_glyphs($zim->spec->response,$lang)    
   );
 }
 
@@ -495,6 +526,84 @@ add_action('ws_new_zim',function($opts){
   exit;
 });
 
+add_action('ws_get_zims_involving',function($opts){  
+  $concept_id = $opts['concept_id'];
+  $result = get_zims_involving($concept_id);
+  $specs = array_map(function ($e) { return $e->spec; },$result);
+  echo json_encode($specs);
+  exit;  
+});
+
+add_action('ws_get_zams_involving',function($opts){  
+  $concept_id = $opts['concept_id'];
+  $result = get_zams_involving($concept_id);
+  $specs = array_map(function ($e) { return $e->spec; },$result);
+  
+  ////print_r($specs);
+  
+  
+  echo json_encode($specs);
+  exit;  
+});
+
+
+add_action('ws_batch_get_zams_involving',function($opts){  
+  $concept_ids = $opts['concept_ids'];
+  $result = batch_get_zams_involving($concept_ids);
+  $specs = array_map(function ($e) { return $e->spec; },$result);
+  
+  ////print_r($specs);
+  
+  
+  echo json_encode($specs);
+  exit;  
+});
+
+
+
+
+
+
+add_action('ws_get_zims_where',function($opts) { 
+  $wheres = Array();
+  if (array_key_exists('receiver',$opts)) {
+    array_push($wheres,sprintf('receiver = %d',$opts['receiver']));
+  }
+  if (array_key_exists('message',$opts)) {
+    array_push($wheres,sprintf('message = %d',$opts['message']));
+  }
+  if (array_key_exists('response',$opts)) {
+    array_push($wheres,sprintf('response = %d',$opts['response']));
+  }
+
+  $result = get_zims_where($wheres);
+  
+  
+  
+  
+  
+  $specs = array_map(function ($e) { return $e->spec; },$result);
+  echo json_encode($specs);
+  exit;  
+});
+
+add_action('ws_get_zams_where',function($opts) { 
+  $wheres = Array();
+  if (array_key_exists('receiver',$opts)) {
+    array_push($wheres,sprintf('receiver = %d',$opts['receiver']));
+  }
+  if (array_key_exists('message',$opts)) {
+    array_push($wheres,sprintf('message = %d',$opts['message']));
+  }
+  if (array_key_exists('response',$opts)) {
+    array_push($wheres,sprintf('response = "%s"',mysql_escape_string($opts['response'])));
+  }
+
+  $result = get_zams_where($wheres);
+  $specs = array_map(function ($e) { return $e->spec; },$result);
+  echo json_encode($specs);
+  exit;  
+});
 
 
 

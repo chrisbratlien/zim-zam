@@ -210,7 +210,7 @@ function get_all_zims() {
 	$mysql_result = mysql_query($sql);	
   $result = array();
 	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row);
+		array_push($result,new Zim($row));
 	}  
   return $result;
 }
@@ -223,6 +223,11 @@ function get_zams_where($wheres = Array()) {
   foreach($wheres as $w) {
     $sql .= sprintf(' AND %s',$w);
   }  
+  
+  //print_r($sql);
+  //exit;
+  
+  
 	$mysql_result = mysql_query($sql);	
   $result = array();
 	while ($row = mysql_fetch_object($mysql_result)) {
@@ -237,7 +242,7 @@ function get_all_zams() {
 	$mysql_result = mysql_query($sql);	
   $result = array();
 	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row);
+		array_push($result,new Zam($row));
 	}  
   return $result;
 }
@@ -247,7 +252,7 @@ function get_zams_with_message($id) {
 	$mysql_result = mysql_query($sql);	
   $result = array();
 	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row);
+		array_push($result,new Zam($row));
 	}  
   return $result;
 }
@@ -258,7 +263,7 @@ function get_zams_with_response($str) {
 	$mysql_result = mysql_query($sql);	
   $result = array();
 	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row);
+		array_push($result,new Zam($row));
 	}  
   return $result;
 }
@@ -501,6 +506,27 @@ function new_zim($opts) {
 
 
 
+
+
+function update_zam_response($opts) {
+  $zam_id = $opts['zam_id'];
+  $response = $opts['response'];
+  $sql = sprintf('UPDATE `zam` SET response = "%s" WHERE zam_id = %d',
+    mysql_escape_string($response),
+    $zam_id);
+    
+  //print_r($sql);
+  //exit;
+    
+  $q = mysql_query($sql);
+  return mysql_error();
+}
+add_action('ws_update_zam_response',function($opts){  
+  $result = update_zam_response($opts);
+  echo json_encode($result);
+  exit;
+});
+
 add_action('ws_new_concept',function($opts){  
   $result = new_concept();
   echo json_encode($result);
@@ -603,6 +629,26 @@ add_action('ws_get_zams_where',function($opts) {
   $specs = array_map(function ($e) { return $e->spec; },$result);
   echo json_encode($specs);
   exit;  
+});
+
+
+
+function foo_zam_search($str) {
+  $wheres = Array();
+  $lang = 1;
+  array_push($wheres,sprintf('response LIKE "%s"','%' . mysql_escape_string($str) . '%'));
+  array_push($wheres,sprintf('message = %d',$lang));
+  $result = get_zams_where($wheres);
+  $specs = array_map(function ($e) { return $e->spec; },$result);
+  echo json_encode($specs);
+  exit;  
+}
+
+
+add_action('ws_foo_zam_search',function($opts) {
+  $query = $opts['query'];
+  echo json_encode(foo_zam_search($query));
+  exit;
 });
 
 

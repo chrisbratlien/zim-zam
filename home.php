@@ -1,5 +1,8 @@
 <?php 
 
+require_once('class.Concept.php');
+require_once('class.Zim.php');
+
 
 add_filter('body_class',function($classes) {
   $classes[] = 'home';
@@ -10,27 +13,16 @@ get_header();
 require_language();
 $lang = current_language();
 
-///pp($lang,'lang');
+//pp($lang,'lang');
 
 ?>
     <div class="container-fluid">
       <div class="row-fluid">
         <div class="span9">
-          <?php show_language_form(); ?>        
-            <table class="table table-striped table-bordered table-condensed all-concepts">
-              <tr><th>receiver</th><th>message</th><th>response</th></tr>
-              <?php
-                foreach(get_all_zims() as $zim) {
-                  echo sprintf('%s',linkify_zim_for_table_with_glyphs($zim,$lang));
-                }
-                foreach(get_all_zams() as $zam) {
-                  //////pp($zim,'zim');
-                  echo sprintf('%s',linkify_zam_for_table_with_glyphs($zam,$lang));
-                }
-              ?>
-            </table>
-            <div id="results"></div>            
+          <?php show_language_form(); ?>     
+            <div id="all-wrap"></div>
             <?php do_action('new_concept_form',$lang); ?>
+            <div id="new-concept-wrap">…or, a 100% un-translated (for now) concept;</div>
         </div><!-- span -->
       </div><!-- rowfluid -->
       <hr>
@@ -45,17 +37,32 @@ $lang = current_language();
 ?>
 
 <script type="text/javascript">
-
-
   ZZ.lang = <?php echo $lang; ?>;
+  ZZ.langConcept = ZZ.Concept({ id: ZZ.lang });
+    var myWrap = jQuery('#all-wrap');
+    var AllList = ZZ.Widgets.AllConcepts({});
+    AllList.renderOn(myWrap);
 
   jQuery(document).ready(function() {
     var newForm = ZZ.Widgets.NewConceptForm({
-      lang: <?php echo $lang; ?>,
+      lang: ZZ.lang,
       langText: '<?php echo array_shift(translate_concept($lang,$lang)); ?>'
     });  
     var newFormWrap = jQuery('#new-concept-wrap');
     newForm.renderOn(newFormWrap);
+
+
+
+
+
+
+
+
+
+
+
+
+
   });
 </script>
 <?php

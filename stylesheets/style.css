@@ -14,3 +14,12 @@ body.home #results table td img { width: 80px; }
 
 .involved-concepts th:nth-child(2) { width: 16%; }
 .all-concepts th:nth-child(2) { width: 16%; }
+
+
+.concept-search-result { background: #fff0ba; border-bottom: 1px solid #bfb08b; border-right: 1px solid #bfb08b;   padding: 0.3em 1.3em; clear: both; }
+.concept-search-result span { padding: 0 1em; }
+
+.handle { border-radius: 1em; margin-left: 1em; background: #0af; cursor: pointer }
+
+ul.search-results { list-style-type: none; line-height: 2em; }
+ul.search-results li { list-style-type: none; line-height: 2em; }

@@ -115,32 +115,20 @@ function show_language_form() {
 }
 
 
-
-/*
-function translate_concept($id,$language) {
-  $sql = sprintf('SELECT * FROM zam WHERE receiver = %d AND message = %d',$id,$language);
-
-	$mysql_result = mysql_query($sql);	
-  $result = array();
-	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row->response);
-	}  
-  return $result;
-}
-*/
-
-function translate_concept($concept_id,$language) {
-  return get_zam_responses($concept_id,$language);
+function text_translations_of_concept($receiver,$message) {
+  $receiver_id = ($receiver instanceof Concept) ? $receiver->id : $receiver;
+  $message_id = ($message instanceof Concept) ? $message->id : $message;
+  return get_zam_responses($receiver_id,$message_id);
 }
 
 function translate_zim_receiver($zim,$language) {
-  return translate_concept($zim->receiver,$language);
+  return text_translations_of_concept($zim->receiver,$language);
 }
 function translate_zim_message($zim,$language) {
-  return translate_concept($zim->message,$language);
+  return text_translations_of_concept($zim->message,$language);
 }
 function translate_zim_response($zim,$language) {
-  return translate_concept($zim->response,$language);
+  return text_translations_of_concept($zim->response,$language);
 }
 
 function get_zims_where($wheres = Array()) {
@@ -224,8 +212,8 @@ function get_zams_where($wheres = Array()) {
     $sql .= sprintf(' AND %s',$w);
   }  
   
-  //print_r($sql);
-  //exit;
+  ///print_r($sql);
+  ///exit;
   
   
 	$mysql_result = mysql_query($sql);	
@@ -342,7 +330,7 @@ function concept_url($id) {
 }
 
 function linkify_concept($id,$lang) {
-  $trans = translate_concept($id,$lang);
+  $trans = text_translations_of_concept($id,$lang);
   if (empty($trans)) {
     return sprintf('<a href="%s"><img class="zigzag" src="%s/images/zigzag-line7.gif" /></a>',concept_url($id),get_bloginfo('template_url'));
   }
@@ -406,13 +394,13 @@ function linkify_zam_for_table_with_glyphs($zam,$lang) {
 //careful with these
 
 function glyph_urls($c) {
-  $glyph_url_concept = new Concept(get_first_zam_receiver(1,'glyph url'));
+  $glyph_url_concept = new Concept(get_first_zam_receiver(1,'glyph url')); //FIXME: hardcoded 1
   $glyph_urls = $c->text_responses_to_concept($glyph_url_concept);
   return $glyph_urls;
 }
 
 function youtube_urls($c) {
-  $glyph_url_concept = new Concept(get_first_zam_receiver(1,'youtube url'));
+  $glyph_url_concept = new Concept(get_first_zam_receiver(1,'youtube url')); //FIXME: hardcoded 1
   $glyph_urls = $c->text_responses_to_concept($glyph_url_concept);
   return $glyph_urls;
 }
@@ -421,7 +409,7 @@ function youtube_urls($c) {
 
 
 function linkify_concept_with_glyphs($id,$lang) {
-  $trans = translate_concept($id,$lang);
+  $trans = text_translations_of_concept($id,$lang);
   if (empty($trans)) {
     return sprintf('<a href="%s"><img class="zigzag" src="%s/images/zigzag-line7.gif" /></a>',concept_url($id),get_bloginfo('template_url'));
   }
@@ -585,11 +573,6 @@ add_action('ws_batch_get_zams_involving',function($opts){
   exit;  
 });
 
-
-
-
-
-
 add_action('ws_get_zims_where',function($opts) { 
   $wheres = Array();
   if (array_key_exists('receiver',$opts)) {
@@ -603,10 +586,6 @@ add_action('ws_get_zims_where',function($opts) {
   }
 
   $result = get_zims_where($wheres);
-  
-  
-  
-  
   
   $specs = array_map(function ($e) { return $e->spec; },$result);
   echo json_encode($specs);
@@ -652,7 +631,12 @@ add_action('ws_foo_zam_search',function($opts) {
 });
 
 
-
+/*
+add_action('ws_get_zam_receivers',function($opts) {
+  echo json_encode(get_zam_receivers($opts['message'],$opts['response']));
+  exit;
+});
+*/
 
 /** BOILERPLATE ***********************************************/
 
@@ -788,9 +772,6 @@ function get_vendors() {
   return $result;
 }
 
-add_action('ws_get_vendors',function() {
-  echo json_encode(get_vendors());
-});
 
 
 
@@ -852,7 +833,7 @@ function scramble() {
 }
 
 
-add_action('ws_upload_vendor_logo',function($opts) {
+add_action('ws_upload_glyph_url',function($opts) {
   //print_r($opts);
   //print_r($_FILES);
 
@@ -865,7 +846,7 @@ add_action('ws_upload_vendor_logo',function($opts) {
     
     $gibberish = substr(scramble(),0,4);
     
-    $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/data',$gibberish,$ext);
+    $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
     $justfile = sprintf('%s.%s',$gibberish,$ext);
   
     $result = move_uploaded_file($v['tmp_name'], $newfile);
@@ -878,18 +859,25 @@ add_action('ws_upload_vendor_logo',function($opts) {
 
 
 
-add_action('ws_get_vendor_logo_from_url',function($opts) {
+add_action('ws_get_glyph_from_url',function($opts) {
   //print_r($opts);
   //print_r($_FILES);
   $url = $opts['url'];
   $ext = preg_replace('/^.*\./','',$url);    
   $gibberish = substr(scramble(),0,4);
-  $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/data',$gibberish,$ext);
+  $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
   $justfile = sprintf('%s.%s',$gibberish,$ext);
   file_put_contents($newfile,file_get_contents($url));
   echo $justfile;
   exit;
 });
+
+
+add_action('ws_get_vendors',function() {
+  echo json_encode(get_vendors());
+  exit;
+});
+
 
 
 
@@ -898,7 +886,7 @@ add_action('new_concept_form',function($lang){
 ?>
   <div class="well">
     <label class="control-label" for="new-concept-response-text">Create the concept of 
-      <input type="text" id="new-concept-response-text" /> (<?php echo array_shift(translate_concept($lang,$lang)); ?>)
+      <input type="text" id="new-concept-response-text" /> (<?php echo array_shift(text_translations_of_concept($lang,$lang)); ?>)
     </label>  
     <br/>
     <button class="btn btn-primary" id="new-concept-submit">Create Concept</button>  

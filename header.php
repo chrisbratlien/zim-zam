@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" manifest="<?php bloginfo('url') ?>/cache-manifest">
   <head>
   <!-- Le styles -->
   <link href="<?php bloginfo('template_url'); ?>/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
@@ -33,6 +33,7 @@
   <script src="<?php bloginfo('template_url'); ?>/lib/bootstrap/js/bootstrap.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/dom.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.pubsub.js"></script>  
+  <script src="<?php bloginfo('template_url'); ?>/javascripts/eachify.js"></script>  
  <script type="text/javascript">
   if (typeof ZZ == "undefined") { var ZZ = {}; }
   ZZ.baseURL = '<?php bloginfo('url'); ?>';

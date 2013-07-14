@@ -63,7 +63,7 @@ require_language();
 
 
 /////////$email_concept_id = get_first_zam_receiver($lang,'email address');
-////$email_address = array_shift(translate_concept($concept_id,$email_concept_id));
+////$email_address = array_shift(text_translations_of_concept($concept_id,$email_concept_id));
 
 /////////$email_address = get_first_zam_response($concept_id,$email_concept_id);
 $email_address = get_first_zam_response($concept_id,get_first_zam_receiver($lang,'email address'));

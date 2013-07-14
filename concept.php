@@ -45,6 +45,7 @@ foreach(youtube_urls($concept) as $url) {
           <div id="my-involved-wrap"></div><!-- my-involved-wrap -->
           <div id="trainer-wrap"></div>
           <div id="new-concept-wrap"></div><!-- new-concept-wrap -->          
+          <div id="uploader-wrap"></div><!-- uploader-wrap -->
         </div><!-- span -->
       </div><!-- rowfluid -->
       <hr>
@@ -65,6 +66,15 @@ add_action('wp_footer',function() use($lang,$concept_id) {
   ZZ.thisConcept = ZZ.Concept({ id: <?php echo $concept_id;?> });
 
   jQuery(document).ready(function() {
+
+
+
+
+
+    var campfire = BSD.PubSub({});
+    
+    
+
 
     jQuery('#submit').click(function() {
     
@@ -110,7 +120,7 @@ add_action('wp_footer',function() use($lang,$concept_id) {
 
     var newForm = ZZ.Widgets.NewConceptForm({
       lang: <?php echo $lang; ?>,
-      langText: '<?php echo array_shift(translate_concept($lang,$lang)); ?>'
+      langText: '<?php echo array_shift(text_translations_of_concept($lang,$lang)); ?>'
     });  
     var newFormWrap = jQuery('#new-concept-wrap');
     newForm.renderOn(newFormWrap);
@@ -119,6 +129,20 @@ add_action('wp_footer',function() use($lang,$concept_id) {
     var involvedList = ZZ.Widgets.Involved({ concept: ZZ.thisConcept });
     involvedList.renderOn(myWrap);
 
+    var uploader = ZZ.Widgets.Uploader({
+      gossip: campfire
+    });
+    var uploaderWrap = jQuery('#uploader-wrap');
+    uploader.renderOn(uploaderWrap);
+    
+    campfire.subscribe('new-upload-url',function(url) {
+      newZam({ receiver: ZZ.conceptID, message: ZZ.cache.glyphURLConcept.id, response: url },function(id) {
+        setTimeout(function() {
+          window.location.reload(); 
+          
+        },1000);
+      });
+    });
   });
 
 

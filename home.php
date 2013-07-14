@@ -46,7 +46,7 @@ $lang = current_language();
   jQuery(document).ready(function() {
     var newForm = ZZ.Widgets.NewConceptForm({
       lang: ZZ.lang,
-      langText: '<?php echo array_shift(translate_concept($lang,$lang)); ?>'
+      langText: '<?php echo array_shift(text_translations_of_concept($lang,$lang)); ?>'
     });  
     var newFormWrap = jQuery('#new-concept-wrap');
     newForm.renderOn(newFormWrap);

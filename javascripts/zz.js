@@ -138,6 +138,17 @@ ZZ.Concept = function(spec) { //spec needs an id
     return result;
   };
   
+  self.receive = function(messageConcept) {
+    var result = {
+      conceptResponses: self.conceptResponsesToConcept(messageConcept),
+      textResponses: self.textResponsesToConcept(messageConcept),
+    };
+    return result;
+  };
+  
+  
+  
+  
   
   self.messageConceptsInvolved = function() {
     var result = [];
@@ -560,8 +571,9 @@ ZZ.Widgets.Trainer = function(spec) {
     
     
     var tdResponse = DOM.td();
-    var save = DOM.button('Save').addClass('btn btn-primary pull-right');
-    save.click(function() {
+    
+    var saveButton = DOM.button('Save').addClass('btn btn-primary pull-right');
+    saveButton.click(function() {
       ///console.log('save',inputs);
       var failure = ['receiver','message','response'].detect(function(prop){
         return inputs[prop] == false; 
@@ -584,7 +596,6 @@ ZZ.Widgets.Trainer = function(spec) {
         window.location.reload();
       },2000);
     });
-    tdResponse.append(save);
     var responseSearchWidget = ZZ.Widgets.ConceptSearch({
       callback: function(concept) {
         inputs.response = concept;
@@ -607,13 +618,13 @@ ZZ.Widgets.Trainer = function(spec) {
     
     tdResponse.append(DOM.div('&nbsp;').css('clear','both'));
     
-    
-
-
+    var tdSave = DOM.td();
+    tdSave.append(saveButton);
 
     row.append(tdReceiver);    
     row.append(tdMessage);    
     row.append(tdResponse);    
+    row.append(tdSave);    
     table.append(row);
     
     
@@ -750,6 +761,13 @@ ZZ.Widgets.Trainer = function(spec) {
   
   }
   
+  function getFirstZamReceiver(msg,resp) {
+    var them = getZamReceivers(msg,resp);
+    if (them.length == 0) { return false; }
+    return them.shift();
+  }
+  
+  
   
   function getAllZams() {
     return getZamsWhere({});
@@ -762,6 +780,99 @@ ZZ.Widgets.Trainer = function(spec) {
 
 
 ZZ.cache.glyphURLConcept = ZZ.Concept({ id: getZamReceivers(1,'glyph url')[0] });
+
+
+ZZ.Reader = function(spec) {
+  var self = {};
+  
+  self.eval = function(stream) {
+  
+    var tokens = stream.split(/\ +/);
+  
+    /*
+    var result = tokens.map(function(token) {
+      var receiverConcepts = getZamReceivers(ZZ.lang,token).map(function(id) { return ZZ.Concept({ id: id }); });
+      return receiverConcepts;  
+    });
+    */
+
+    var concepts = tokens.map(function(token) {
+      var recv = getFirstZamReceiver(ZZ.lang,token);
+      /////console.log('recv',recv);
+      return recv;
+    }).map(function(id) {
+      if (id) {
+        return ZZ.Concept({ id: id });    
+      }
+      return false;
+    });
+
+
+    var accum = concepts.shift();
+    
+    concepts.eachPCN(function(o) {
+      ///console.log('o',o);
+      
+      var responses = accum.receive(o.current);
+      
+      if (responses.textResponses.length > 0) {
+        return responses.textResponses[0];
+      }
+      else if (responses.conceptResponses.length > 0) {
+        accum = responses.conceptResponses[0]
+      }
+      else {
+        console.log('died at',o.current,o);
+        return "ERROR";
+      }
+      
+      ///console.log('responses',responses);
+      
+      
+      
+      
+      
+      ///var conceptResponses = accum.conceptResponsesToConcept(concept);
+      ////var textResponses = accum.textResponsesToConcept(concept);
+      ////console.log('cR',conceptResponses);
+      ////console.log('tR',textResponses);
+        ///accum = conceptResponses.shift(); 
+    });
+
+
+    return accum;    
+    
+    /* logic programming, hal abelson, sicp 8A: Logic Programming
+    logic to express what is true
+    logic to check what is true
+    logic to find out what is true
+    */
+    
+    
+    
+
+    ///console.log('result',result);
+    
+    
+    ///return result;
+    
+    /*  
+    eachify(tokens).eachPCN(function(o){
+        console.log('current',o.current,'next',o.next);
+    
+      var receiverConcepts = getZamReceivers(ZZ.lang,o.current).collect(function(id) { return ZZ.Concept({ id: id }); });
+      console.log('receiverConcepts',receiverConcepts);
+    });
+  
+  
+    return 'OK';
+    */
+  
+  };
+  
+  
+  return self;
+}
 
 
 /*
@@ -778,5 +889,107 @@ get_first_zam_receiver(1,'glyph url'));
 
 
 
+
+ZZ.Widgets.Uploader = function(spec) {
+  var self = {};
+
+
+  var thumb = DOM.img().attr('display','none').css('width','40px');
+
+  self.uploadFiles = function(url, files) {
+    //found some of this here: http://www.html5rocks.com/en/tutorials/file/xhr2/
   
+    var formData = new FormData();
+  
+    for (var i = 0, file; file = files[i]; ++i) {
+      formData.append(file.name, file);
+      
+    }
+    formData.append('action','upload_glyph_url');
+  
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.onload = function(e) { 
    
+   
+      var justTheFile = e.target.responseText;
+      
+      var fullURL = ZZ.baseURL + '/uploads/' + justTheFile;      
+      
+      self.reveal(fullURL);    
+    };
+  
+    xhr.send(formData);  // multipart/form-data
+  };
+
+
+
+
+
+
+
+
+
+
+
+  self.renderOn = function(wrap) {
+
+    wrap.append(DOM.h1('glyph uploader'));
+    wrap.append(thumb);
+
+    var logoFileInput = DOM.input().attr('type','file');
+    logoFileInput.change(function() {
+      self.uploadFiles('/ws', this.files);
+    });
+    
+    
+    wrap.append(logoFileInput);
+    
+    
+    var urlLabel = DOM.label('or, an image URL');
+    
+    
+    var glyphURLInput = DOM.input();
+    glyphURLInput.change(function() {
+      jQuery.ajax({
+        url: '/ws',
+        data: { 
+        action: 'get_glyph_from_url', 
+          url: this.value
+        },
+        success: function(resp) {
+          var fullURL = ZZ.baseURL + '/uploads/' + resp;          
+          //console.log('full URL',fullURL);
+          self.reveal(fullURL);
+        }
+      });
+    });
+    urlLabel.append(glyphURLInput);
+    wrap.append(urlLabel);
+  };
+  
+  self.reveal = function(url) {
+    thumb.attr('src',url);
+    thumb.show();  
+    spec.gossip.publish('new-upload-url',url);
+  }
+
+
+  return self;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

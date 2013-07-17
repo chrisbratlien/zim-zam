@@ -16,8 +16,6 @@ $concept = new Concept($concept_id);
 get_header(); 
 require_language();
 $lang = current_language();
-
-
 ?>
     <div class="container-fluid">
       <div class="row-fluid">

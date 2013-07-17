@@ -106,6 +106,12 @@ function route($uri) {
       $concept_id = $matches[1];
       require_once('concept.php');
   }
+  elseif (preg_match('/\/gallery\/(\d+)$/',$uri,$matches)) {
+      //print_r($matches);
+      ///die('ok');
+      $concept_id = $matches[1];
+      require_once('gallery.php');
+  }
   else {
     require_once('404.php');
   }  

@@ -777,6 +777,17 @@ ZZ.Widgets.Trainer = function(spec) {
     return getZimsWhere({});
   }
 
+  function setLanguage(concept) {
+    jQuery.ajax({
+      type: 'POST',
+      url: ZZ.baseURL + '/ws',
+      data: { action: 'set_language', language: concept.id },
+      success: function(r) {
+        console.log(r);
+      }
+    });
+      
+  }
 
 
 ZZ.cache.glyphURLConcept = ZZ.Concept({ id: getZamReceivers(1,'glyph url')[0] });
@@ -892,63 +903,33 @@ get_first_zam_receiver(1,'glyph url'));
 
 ZZ.Widgets.Uploader = function(spec) {
   var self = {};
-
-
   var thumb = DOM.img().attr('display','none').css('width','40px');
-
   self.uploadFiles = function(url, files) {
     //found some of this here: http://www.html5rocks.com/en/tutorials/file/xhr2/
-  
     var formData = new FormData();
-  
     for (var i = 0, file; file = files[i]; ++i) {
       formData.append(file.name, file);
-      
     }
     formData.append('action','upload_glyph_url');
-  
     var xhr = new XMLHttpRequest();
     xhr.open('POST', url, true);
     xhr.onload = function(e) { 
-   
-   
       var justTheFile = e.target.responseText;
-      
       var fullURL = ZZ.baseURL + '/uploads/' + justTheFile;      
-      
       self.reveal(fullURL);    
     };
-  
     xhr.send(formData);  // multipart/form-data
   };
 
-
-
-
-
-
-
-
-
-
-
   self.renderOn = function(wrap) {
-
     wrap.append(DOM.h1('glyph uploader'));
     wrap.append(thumb);
-
     var logoFileInput = DOM.input().attr('type','file');
     logoFileInput.change(function() {
       self.uploadFiles('/ws', this.files);
     });
-    
-    
     wrap.append(logoFileInput);
-    
-    
     var urlLabel = DOM.label('or, an image URL');
-    
-    
     var glyphURLInput = DOM.input();
     glyphURLInput.change(function() {
       jQuery.ajax({
@@ -967,24 +948,105 @@ ZZ.Widgets.Uploader = function(spec) {
     urlLabel.append(glyphURLInput);
     wrap.append(urlLabel);
   };
-  
   self.reveal = function(url) {
     thumb.attr('src',url);
     thumb.show();  
     spec.gossip.publish('new-upload-url',url);
   }
-
-
   return self;
 };
 
+ZZ.Widgets.Gallery = function(spec) {
+  var self = {};
+
+  var columns = [];
+  var history = [];
+
+  var currentConcept = spec.concept;
 
 
+  self.newColumn = function() {
+    return DOM.div().addClass('span2');
+  }
 
 
+  var recvCol = self.newColumn();
+  var msgCol = self.newColumn();
+  var respCol = self.newColumn();
+
+  
+
+  columns.push(self.newColumn());
+  var currentColumn = columns[0];
+
+  self.recenterTo = function(concept) {
+    recvCol.empty();
+    msgCol.empty();
+    respCol.empty();
+
+    currentConcept = concept;
+    ///recvCol.append(ZZ.badassLink(currentConcept));
+
+    concept.zimsInvolved().each(function(z) {
+
+      var recvTile = DOM.div().addClass('tile');
+      var recvC = z.receiverConcept();
+      recvTile.append(ZZ.badassLink(recvC));
+      recvTile.click(function() { self.recenterTo(recvC); });
+      recvCol.append(recvTile);
 
 
+      var mTile = DOM.div().addClass('tile');
+      var mc = z.messageConcept();
+      mTile.append(ZZ.badassLink(mc));
+      mTile.click(function() { self.recenterTo(mc); });
+      msgCol.append(mTile);
+      
+      var rTile = DOM.div().addClass('tile');
+      var rc = z.responseConcept();
+      rTile.append(ZZ.badassLink(rc));
+      rTile.click(function() { self.recenterTo(rc); });
+      respCol.append(rTile);
+    });
 
+    concept.zamsInvolved().each(function(z) {
+
+      var recvTile = DOM.div().addClass('tile');
+      var recvC = z.receiverConcept();
+      recvTile.append(ZZ.badassLink(recvC));
+      recvTile.click(function() { self.recenterTo(recvC); });
+      recvCol.append(recvTile);
+
+
+      var mTile = DOM.div().addClass('tile');
+      var mc = z.messageConcept();
+      mTile.append(ZZ.badassLink(mc));
+      mTile.click(function() { self.recenterTo(mc); });
+      msgCol.append(mTile);
+            
+      var rTile = DOM.div().addClass('tile');
+      var rc = z.spec.response;
+      rTile.append(rc);
+      respCol.append(rTile);
+    });
+  }
+
+  self.renderOn = function(wrap) {
+    wrap.append(DOM.h1('Gallery'));
+
+
+    wrap.append(recvCol);
+    wrap.append(msgCol);     
+    wrap.append(respCol);     
+    self.recenterTo(currentConcept);
+    /**
+    currentConcept.messageConceptsInvolved().each(function(mc){
+      msgCol.append(ZZ.badassLink(mc));
+    });
+    **/
+  };
+  return self;
+}
 
 
 

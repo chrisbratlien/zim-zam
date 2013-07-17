@@ -23,3 +23,7 @@ body.home #results table td img { width: 80px; }
 
 ul.search-results { list-style-type: none; line-height: 2em; }
 ul.search-results li { list-style-type: none; line-height: 2em; }
+
+
+#gallery-wrap .tile:hover { background: red; color: white; cursor: pointer; }
+#gallery-wrap .tile:hover a { background: red; color: white; cursor: pointer; }

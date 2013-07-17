@@ -873,6 +873,16 @@ add_action('ws_get_glyph_from_url',function($opts) {
 });
 
 
+add_action('ws_set_language',function($opts){
+  $_SESSION['language'] = $opts['language'];
+  echo json_encode($_SESSION);
+  exit;
+});
+
+
+
+
+
 add_action('ws_get_vendors',function() {
   echo json_encode(get_vendors());
   exit;

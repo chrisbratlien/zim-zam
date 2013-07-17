@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" manifest="<?php bloginfo('url') ?>/cache-manifest">
+<html lang="en">
   <head>
   <!-- Le styles -->
   <link href="<?php bloginfo('template_url'); ?>/lib/bootstrap/css/bootstrap.css" rel="stylesheet">

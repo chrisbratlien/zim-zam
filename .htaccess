@@ -18,4 +18,12 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule . index.php [L]
 </IfModule>
 
+
+<FilesMatch "uploads">
+  Header set Cache-Control "max-age=864000, public, must-revalidate"
+  Header unset Last-Modified
+</FilesMatch>
+
+
+
 # END WordPress

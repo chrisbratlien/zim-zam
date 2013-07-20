@@ -14,13 +14,15 @@ $concept = new Concept($concept_id);
 
 
 get_header(); 
-require_language();
+//require_language();
 $lang = current_language();
 ?>
     <div class="container-fluid">
       <div class="row-fluid">
         <div class="span12">
-          <?php show_language_form(); ?>
+          <div id="pov">
+            <div id="pov-search-wrap"></div>          
+          </div><!-- pov -->
 
             <div style="float: right; width: 40%;" ><h2><?php echo linkify_concept($concept_id,$lang); ?></h2></div>
 
@@ -102,23 +104,29 @@ add_action('wp_footer',function() use($lang,$concept_id) {
     });
 
 
+    var povWrap = jQuery('#pov-search-wrap');    
+    ZZ.Widgets.ConceptSearch({
+      choice: ZZ.langConcept,
+      placeholder: 'Language / POV',
+      callback: function(concept) {
+        ZZ.lang = concept.id;
+        ZZ.langConcept = concept;
+        setLanguage(concept);
+      }
+    }).renderOn(povWrap);
+
     var trainerWrap = jQuery('#trainer-wrap');    
     ZZ.Widgets.Trainer({
       concept: ZZ.thisConcept
     }).renderOn(trainerWrap);
 
-    var messageSearchWrap = jQuery('#message-search-wrap');    
-    ZZ.Widgets.ConceptSearch({
-      callback: function(concept) {
-        alert('yay, i got pickedd');
-      }
-    }).renderOn(messageSearchWrap);
-
-
-
     var newForm = ZZ.Widgets.NewConceptForm({
       lang: <?php echo $lang; ?>,
-      langText: '<?php echo array_shift(text_translations_of_concept($lang,$lang)); ?>'
+      langText: '<?php echo array_shift(text_translations_of_concept($lang,$lang)); ?>',
+      callback: function(concept) {
+        ///console.log('concept',concept);
+        window.location.href = concept.linkify();
+      }
     });  
     var newFormWrap = jQuery('#new-concept-wrap');
     newForm.renderOn(newFormWrap);

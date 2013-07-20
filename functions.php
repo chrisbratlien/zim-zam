@@ -436,11 +436,6 @@ function linkify_zim_for_table_with_glyphs($zim,$lang) {
 }
 
 
-
-
-
-
-
 function new_concept() {
   $sql = "INSERT INTO `concepts` (`concept_id`) VALUES (NULL);";
   $q = mysql_query($sql);
@@ -462,15 +457,9 @@ function new_zam($opts) {
   );
   $q = mysql_query($sql);
   $zam_id = mysql_insert_id();
-  return $zam_id;
-}
 
-
-function new_concept_and_zam($opts) {
-  $concept = new_concept();
-  $opts['receiver'] = $concept->id;
-  $zam_id = new_zam($opts);
-  return $concept;   
+  $them = get_zams_where(array(sprintf('zam_id = %d',$zam_id)));
+  return array_shift($them);
 }
 
 
@@ -488,13 +477,21 @@ function new_zim($opts) {
   );
   $q = mysql_query($sql);
   $zim_id = mysql_insert_id();
-  return $zim_id;
+  
+  
+  $them = get_zims_where(array(sprintf('zim_id = %d',$zim_id)));
+  
+  ///return $zim_id;
+  return array_shift($them);
 }
 
 
-
-
-
+function new_concept_and_zam($opts) {
+  $concept = new_concept();
+  $opts['receiver'] = $concept->id;
+  $zam_id = new_zam($opts);
+  return $concept;   
+}
 
 function update_zam_response($opts) {
   $zam_id = $opts['zam_id'];
@@ -523,9 +520,34 @@ add_action('ws_new_concept',function($opts){
 
 add_action('ws_new_zam',function($opts){  
   $result = new_zam($opts);
-  echo $result;
+  ///////print_r($result);
+  echo json_encode($result->spec);
   exit;
 });
+
+
+
+
+function delete_zam($opts) {
+  $zam_id = $opts['zam_id'];
+  preg_match('/^\d+$/',$zam_id) or die('invalid zam_id');
+  
+  $sql = sprintf('DELETE FROM `zam` WHERE zam_id = %d',$zam_id);
+  //print_r($sql);
+  //exit;
+  $q = mysql_query($sql);
+  return mysql_error();
+}
+
+
+
+add_action('ws_delete_zam',function($opts){  
+  $result = delete_zam($opts);
+  ///////print_r($result);
+  echo json_encode($result);
+  exit;
+});
+
 
 add_action('ws_new_concept_and_zam',function($opts){  
   $result = new_concept_and_zam($opts);
@@ -536,7 +558,8 @@ add_action('ws_new_concept_and_zam',function($opts){
 
 add_action('ws_new_zim',function($opts){  
   $result = new_zim($opts);
-  echo $result;
+  ///////print_r($result);
+  echo json_encode($result->spec);
   exit;
 });
 

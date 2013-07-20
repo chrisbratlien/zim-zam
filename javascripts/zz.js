@@ -25,12 +25,9 @@ ZZ.Zim = function(spec) {
   self.messageConcept = function() {
     return ZZ.Concept({ id: spec.message });
   };
-
   self.responseConcept = function() {
     return ZZ.Concept({ id: spec.response });
   };
-
-
   return self;
 };
 ZZ.Zam = function(spec) {
@@ -42,15 +39,88 @@ ZZ.Zam = function(spec) {
   self.messageConcept = function() {
     return ZZ.Concept({ id: spec.message });
   };
+  
+  /*
+  self.delete = function(callback) {
+    return ZZ.deleteZam(self,callback);
+  }
+  */
+  
   return self;
 };
 
 
 ZZ.cache = {};
+
+
 ZZ.cache.zam_id = {};
 ZZ.cache.zim_id = {};
+
+
+
 ZZ.cache.zimsInvolving = {};
 ZZ.cache.zamsInvolving = {};
+
+
+
+ZZ.cache.addZim = function(zim) {
+  if (typeof ZZ.cache.zimsInvolving[zim.spec.receiver] == "undefined") {
+    ZZ.cache.zimsInvolving[zim.spec.receiver] = [];
+  }
+  if (typeof ZZ.cache.zimsInvolving[zim.spec.message] == "undefined") {
+    ZZ.cache.zimsInvolving[zim.spec.message] = [];
+  }
+  if (typeof ZZ.cache.zimsInvolving[zim.spec.response] == "undefined") {
+    ZZ.cache.zimsInvolving[zim.spec.response] = [];
+  }
+
+  ZZ.cache.zimsInvolving[zim.spec.receiver].push(zim);
+  ZZ.cache.zimsInvolving[zim.spec.message].push(zim);
+  ZZ.cache.zimsInvolving[zim.spec.response].push(zim);
+}
+
+ZZ.cache.addZam = function(zam) {
+  if (typeof ZZ.cache.zamsInvolving[zam.spec.receiver] == "undefined") {
+    ZZ.cache.zamsInvolving[zam.spec.receiver] = [];
+  }
+  if (typeof ZZ.cache.zamsInvolving[zam.spec.message] == "undefined") {
+    ZZ.cache.zamsInvolving[zam.spec.message] = [];
+  }
+
+  ZZ.cache.zamsInvolving[zam.spec.receiver].push(zam);
+  ZZ.cache.zamsInvolving[zam.spec.message].push(zam);
+}
+
+
+ZZ.cache.removeZam = function(z) {
+
+  /**
+  if (typeof ZZ.cache.zamsInvolving[zam.spec.receiver] == "undefined") {
+    ZZ.cache.zamsInvolving[zam.spec.receiver] = [];
+  }
+  if (typeof ZZ.cache.zamsInvolving[zam.spec.message] == "undefined") {
+    ZZ.cache.zamsInvolving[zam.spec.message] = [];
+  }
+  if (typeof ZZ.cache.zamsInvolving[zam.spec.response] == "undefined") {
+    ZZ.cache.zamsInvolving[zam.spec.response] = [];
+  }
+  ***/
+
+
+  function helper(conceptID) {
+    if (typeof ZZ.cache.zamsInvolving[conceptID] == "undefined") {
+      ZZ.cache.zamsInvolving[conceptID] = [];
+    }
+    var cached = ZZ.cache.zamsInvolving[conceptID];
+    var reduced = cached.select(function(cz) { return cz.zam_id != z.zam_id; });
+    ZZ.cache.zamsInvolving[conceptID] = reduced;
+  }
+  
+  helper(z.spec.receiver);
+  helper(z.spec.message);
+}
+
+
 
 
 /*
@@ -172,9 +242,18 @@ ZZ.Concept = function(spec) { //spec needs an id
   };
   
   self.glyphURLs = function() {
+    var defaultGlyphURL = 'http://zimzam.dev.bratliensoftware.com/images/zigzag-line7.gif';
     var resp = self.textResponsesToConcept(ZZ.cache.glyphURLConcept);
     ////console.log('resp',resp);
-    return resp;
+    if (resp.length == 0) {
+      resp.push(defaultGlyphURL);
+    }  
+    
+    var filtered = resp.select(function(u){
+      return u.length > 0;
+    });
+      
+    return filtered;
   }  
 
   return self;
@@ -190,10 +269,7 @@ ZZ.Widgets.NewConceptForm = function(spec) {
 
     var createButton = DOM.button('New Concept').addClass('btn btn-primary');
     createButton.click(function() {
-      newConcept(function(concept) {
-        ///console.log('concept',concept);
-        window.location.href = concept.linkify();
-      });
+      newConcept(spec.callback);
     });
     well.append(createButton);
     wrap.append(well);
@@ -236,14 +312,8 @@ ZZ.Widgets.NewConceptFormV1 = function(spec) {
 
 ZZ.badassLink = function(concept) {
     var translations = concept.textResponsesToConcept(ZZ.langConcept);
-    var defaultGlyphURL = 'http://zimzam.dev.bratliensoftware.com/images/zigzag-line7.gif';
 
     var glyphs = concept.glyphURLs();
-    /////console.log('glyphs',glyphs);
-    
-    if (glyphs.length == 0) {
-      glyphs.push(defaultGlyphURL);
-    }    
     var link = DOM.a().attr('href',concept.linkify());
     glyphs.each(function(url) {     
       link.append(DOM.img().attr('src',url).attr('width','20px'));
@@ -408,19 +478,34 @@ ZZ.Widgets.Procrastinator = function(spec) {
 
 
 ZZ.Widgets.ConceptSearch = function(spec) {
-  var backplane = BSD.PubSub({});
-
   var self = {};
+  var backplane = BSD.PubSub({});
+  self.publish = backplane.publish;
+  self.subscribe = backplane.subscribe;
+
 
 
   var results = [];
-  var choice = false;
+  var choice = spec.choice || false;
+  
+  var placeholder = spec.placeholder || 'concept search';
+  
 
-  var textBox = DOM.input();
+  var textBox = DOM.input().attr('type','text').attr('placeholder',placeholder).addClass('search-query');
+  textBox.blur(function() {
+    self.publish('blur',self);
+  });
+  
+  self.focus = function() {
+    textBox.focus();
+  }
+
+    
   var resultsUL = DOM.ul().addClass('search-results');
 
   var stoner = ZZ.Widgets.Procrastinator({
     callback: function() {
+      ////console.log('STONER CALLBACK');
     
       ////console.log(textBox.val());
       var query = textBox.val();
@@ -444,76 +529,108 @@ ZZ.Widgets.ConceptSearch = function(spec) {
       backplane.publish('search-results',conjured);
     }  
   });
+  
+  
+  self.text = function() {
+    return textBox.val();
+  }
 
+  self.redrawUL = function(concepts) {
+    resultsUL.empty();
+    concepts.each(function(concept) {
+      var li = DOM.li();
+      var resultDiv = DOM.div().addClass('concept-search-result');
+      var link = ZZ.badassLink(concept);        
+      var handle = DOM.button().addClass('btn btn-mini pull-right');
+
+     /////// console.log('concept',concept,'choice',choice);
+      handle.click(function() {
+        if (concept == choice) {
+          backplane.publish('search-results',concepts);
+        }
+        else {
+          backplane.publish('use-search-result',concept);
+        }
+      });      
+
+
+      if (concept == choice) {
+          handle.html('lose it');      
+      }
+      else {
+          handle.html('use it');      
+      }
+
+
+      resultDiv.append(link);
+      resultDiv.append(handle);
+      li.append(resultDiv);
+      resultsUL.append(li);
+    });
+  };
+
+
+
+  backplane.subscribe('search-results',function(concepts) {
+    results = concepts;
+    choice = false;
+    ///console.log('payload',concepts);
+    textBox.show();
+    self.redrawUL(concepts);
+  });
+  
+  
+  backplane.subscribe('use-search-result',function(o) {
+    textBox.val(null);
+    textBox.hide();
+    choice = o;
+    self.redrawUL([choice]);
+    spec.callback(choice);
+  });
+  
   self.renderOn = function(wrap) {
     textBox.keyup(function(e){
-      
-    
+      var c = e.keyCode || e.which;
+      if (c == ZZ.keycodes.TAB) { 
+        ///console.log('KEYUP TAB EVEN!!!!');        
+        if (results.length == 1) {
+          return false; //we're already at the result we want. keydown would have already handled this stoner.beg
+        }
+      }
+      ////console.log('KEYUP!!!');
       stoner.beg();
     });
     
     textBox.keydown(function(e){
       var c = e.keyCode || e.which;
+      
       ////console.log('c',c);
       if (c == ZZ.keycodes.TAB) {
-          console.log('tab');
+        ///console.log('TAB');
+        
+        
+        
         if (results.length == 1) {
-            choice = results[0];
-            ////handle.html('lose it');
-            textBox.hide();
-            spec.callback(choice);
-
+          e.preventDefault();
+          ///console.log('PREVENTING DEFAULT!!!!');
+          self.publish('blur',self);
+        
+        
+          backplane.publish('use-search-result',results[0]);
+          return false;
         }
         return false;
       }
     });
-    
-    
-    
 
-    backplane.subscribe('search-results',function(concepts) {
-      results = concepts;
-    
-    
-      ///console.log('payload',concepts);
-      resultsUL.empty();
-      
-      
-      
-            
-      concepts.each(function(concept) {
-        var li = DOM.li();
-        var resultDiv = DOM.div().addClass('concept-search-result');
-        var link = ZZ.badassLink(concept);        
-        var handle = DOM.button('use it').addClass('btn btn-mini pull-right');
-        handle.click(function() {
-          if (!choice) { 
-            //we're making the choice now
-            choice = concept;
-            handle.html('lose it');
-            textBox.hide();
-            li.siblings().hide();
-            spec.callback(choice);
-          }
-          else {
-            //un-choose
-            choice = false;
-            handle.html('use it');
-            textBox.show();
-            li.siblings().show();
-          }        
-        });
-        resultDiv.append(link);
-        resultDiv.append(handle);
-        li.append(resultDiv);
-        resultsUL.append(li);
-      });
-    });
 
     wrap.append(textBox);
     wrap.append(DOM.div('&nbsp;').css('clear','both'));
     wrap.append(resultsUL);    
-
+    if (choice) { 
+      ///console.log('weeee');
+      backplane.publish('use-search-result',choice);
+    }
   };
   
   return self;
@@ -522,6 +639,11 @@ ZZ.Widgets.ConceptSearch = function(spec) {
 
 ZZ.Widgets.Trainer = function(spec) {
   var self = {};
+
+  var backplane = BSD.PubSub({});
+  self.publish = backplane.publish;
+  self.subscribe = backplane.subscribe;
+
 
   var inputs = {
     receiver: spec.concept,
@@ -562,9 +684,10 @@ ZZ.Widgets.Trainer = function(spec) {
         
     var tdMessage = DOM.td();
     var messageSearchWidget = ZZ.Widgets.ConceptSearch({
+      placeholder: 'message search',
       callback: function(concept) {
         inputs.message = concept;
-        console.log('inputs',inputs);
+        ///console.log('inputs',inputs);
       }
     });
     messageSearchWidget.renderOn(tdMessage); 
@@ -575,6 +698,21 @@ ZZ.Widgets.Trainer = function(spec) {
     var saveButton = DOM.button('Save').addClass('btn btn-primary pull-right');
     saveButton.click(function() {
       ///console.log('save',inputs);
+      
+      
+      
+      inputs.response = inputs.response || responseSearchWidget.text(); /// dual purpose!! :D
+
+
+
+      /***
+      console.log('inputs',inputs);
+      console.log('text?',responseSearchWidget.text());
+      console.log('SAAAVE');
+      return false;
+      ***/
+      
+      
       var failure = ['receiver','message','response'].detect(function(prop){
         return inputs[prop] == false; 
       });
@@ -583,27 +721,36 @@ ZZ.Widgets.Trainer = function(spec) {
         return false;
       }      
       if (typeof inputs.response == "string") {
-        newZam({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response },function(id) {
-          console.log('wooo, new ZAM',id);
+        newZam({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response },function(z) {
+          backplane.publish('onSave',z);
         });
       }
       else {
-        newZim({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response.id },function(id) {
-          console.log('wooo, new ZIM',id);
+        newZim({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response.id },function(z) {
+          backplane.publish('onSave',z);
         });      
-      }
-      setTimeout(function(){
-        window.location.reload();
-      },2000);
+      }      
     });
     var responseSearchWidget = ZZ.Widgets.ConceptSearch({
+      placeholder: 'response search',
       callback: function(concept) {
         inputs.response = concept;
         console.log('inputs',inputs);
       }
     });
+    messageSearchWidget.subscribe('blur',function(o){
+      ////console.log('OMG I HEARD THAT');
+      responseSearchWidget.focus();
+    });
+
+
     responseSearchWidget.renderOn(tdResponse);
 
+
+
+
+
+    /*
     var responseTextBox = DOM.input();
     responseTextBox.change(function(){
       inputs.response = this.value;
@@ -614,7 +761,7 @@ ZZ.Widgets.Trainer = function(spec) {
     var textLabel = DOM.label('or the text <br/>');
     textLabel.append(responseTextBox);
     tdResponse.append(textLabel);    
-    
+    */
     
     tdResponse.append(DOM.div('&nbsp;').css('clear','both'));
     
@@ -665,9 +812,46 @@ ZZ.Widgets.Trainer = function(spec) {
         message: spec.message,
         response: spec.response
       },
+      success: function(r) {
+        var o = eval('(' + r + ')');
+        var zam = ZZ.Zam(o);
+        ZZ.cache.addZam(zam);        
+        callback(zam);
+      }
+    });
+  }
+
+
+
+  ZZ.deleteZam = function(o,callback) {
+    var zam_id = false;
+    switch(typeof o) {
+      case 'object':
+        zam_id = o.zam_id;      
+        break;
+      case 'number':
+        zam_id = o;      
+        break;
+      default:
+        break;
+    };
+    if (! zam_id) {
+      return "COULD NOT DELETE!!!!";
+    }
+    jQuery.ajax({
+      url: '/ws',
+      data: { 
+        action: 'delete_zam', 
+        zam_id: zam_id,
+        zzak: prompt('API Key')
+      },
       success: callback
     });
-  }   
+  };
+  
+  
+  
+
   
   function newConceptAndZam(spec,callback) {  
     jQuery.ajax({
@@ -696,9 +880,18 @@ ZZ.Widgets.Trainer = function(spec) {
         message: spec.message,
         response: spec.response
       },
-      success: callback
+      success: function(r) {
+        var o = eval('(' + r + ')');        
+        var zim = ZZ.Zim(o);
+        ZZ.cache.addZim(zim);        
+        callback(zim);      
+      }
     });
   }
+  
+  
+  
+  
 
 
   function updateZamResponse(o,callback) {
@@ -783,7 +976,7 @@ ZZ.Widgets.Trainer = function(spec) {
       url: ZZ.baseURL + '/ws',
       data: { action: 'set_language', language: concept.id },
       success: function(r) {
-        console.log(r);
+        ////console.log(r);
       }
     });
       
@@ -962,83 +1155,162 @@ ZZ.Widgets.Gallery = function(spec) {
   var columns = [];
   var history = [];
 
-  var currentConcept = spec.concept;
+  var backplane = BSD.PubSub({});
 
+  self.publish = backplane.publish;
+  self.subscribe = backplane.subscribe;
+
+
+
+  self.currentConcept = spec.concept;
 
   self.newColumn = function() {
     return DOM.div().addClass('span2');
   }
 
 
-  var recvCol = self.newColumn();
-  var msgCol = self.newColumn();
-  var respCol = self.newColumn();
+  var link = DOM.a();
+  var thumb = DOM.img().addClass('thumb');
+  var table = DOM.table().addClass('table');
+  var back = DOM.button('Back').addClass('btn btn-mini btn-inverse');
 
-  
-
-  columns.push(self.newColumn());
-  var currentColumn = columns[0];
+  back.click(function(){
+    if (history.length < 2) { return false; }
+    history.pop();
+    self.recenterTo(history.pop());    
+  });
 
   self.recenterTo = function(concept) {
-    recvCol.empty();
-    msgCol.empty();
-    respCol.empty();
+    self.currentConcept = concept;
+    history.push(concept);
 
-    currentConcept = concept;
+
+    var gu = concept.glyphURLs().shift();
+    thumb.attr('src',gu);
+    
+    link.html('');
+    var langAnswer = concept.receive(ZZ.langConcept);
+    link.html(DOM.h2(langAnswer.textResponses.shift() || ''));
+    link.attr('href',concept.linkify());
+    
+
+    table.empty();
+    
+    //currentConcept = concept;
     ///recvCol.append(ZZ.badassLink(currentConcept));
-
+    var headerRow = DOM.tr();
+    headerRow.append(DOM.td('<strong>receiver</strong> (it)'));
+    headerRow.append(DOM.td('<strong>message</strong> (when asked...)'));
+    headerRow.append(DOM.td('<strong>response</strong> (responds with...)'));
+    headerRow.append(DOM.td('&nbsp;'));    
+    table.append(headerRow);
+    
+    
     concept.zimsInvolved().each(function(z) {
+      var row = DOM.tr();
 
-      var recvTile = DOM.div().addClass('tile');
+      var recvTile = DOM.td().addClass('tile');
       var recvC = z.receiverConcept();
       recvTile.append(ZZ.badassLink(recvC));
       recvTile.click(function() { self.recenterTo(recvC); });
-      recvCol.append(recvTile);
+      row.append(recvTile);
 
 
-      var mTile = DOM.div().addClass('tile');
+      var mTile = DOM.td().addClass('tile');
       var mc = z.messageConcept();
       mTile.append(ZZ.badassLink(mc));
       mTile.click(function() { self.recenterTo(mc); });
-      msgCol.append(mTile);
+      row.append(mTile);
       
-      var rTile = DOM.div().addClass('tile');
+      var rTile = DOM.td().addClass('tile');
       var rc = z.responseConcept();
       rTile.append(ZZ.badassLink(rc));
       rTile.click(function() { self.recenterTo(rc); });
-      respCol.append(rTile);
+      row.append(rTile);
+      
+      var tdDelete = DOM.td();
+      var deleteButton = DOM.button('Delete').addClass('btn btn-mini btn-danger');
+      deleteButton.click(function(){
+        /*
+        ZZ.deleteZim(z,function() {
+          self.refresh();  
+        });
+        */
+      });
+      tdDelete.append(deleteButton);
+      row.append(tdDelete);
+      
+      
+
+      table.append(row);
     });
 
     concept.zamsInvolved().each(function(z) {
 
-      var recvTile = DOM.div().addClass('tile');
+      var row = DOM.tr();
+      
+      var recvTile = DOM.td().addClass('tile');
       var recvC = z.receiverConcept();
       recvTile.append(ZZ.badassLink(recvC));
       recvTile.click(function() { self.recenterTo(recvC); });
-      recvCol.append(recvTile);
+      row.append(recvTile);
 
 
-      var mTile = DOM.div().addClass('tile');
+      var mTile = DOM.td().addClass('tile');
       var mc = z.messageConcept();
       mTile.append(ZZ.badassLink(mc));
       mTile.click(function() { self.recenterTo(mc); });
-      msgCol.append(mTile);
+      row.append(mTile);
             
-      var rTile = DOM.div().addClass('tile');
+      var rTile = DOM.td().addClass('tile');
       var rc = z.spec.response;
       rTile.append(rc);
-      respCol.append(rTile);
+      row.append(rTile);
+
+
+      var tdDelete = DOM.td();
+      var deleteButton = DOM.button('Delete').addClass('btn btn-mini btn-danger');
+      deleteButton.click(function(){
+      				
+        /***
+				var cached = ZZ.cache.zamsInvolving[concept.id];
+				var reduced = cached.select(function(a) { return a.zam_id != z.zam_id; });
+				ZZ.cache.zamsInvolving[concept.id] = reduced;
+        ***/
+        
+        ZZ.cache.removeZam(z);
+        
+
+        ZZ.deleteZam(z,function() {
+          self.refresh();  
+        });
+      });
+      tdDelete.append(deleteButton);
+      row.append(tdDelete);
+
+
+      table.append(row);
     });
+    
+    self.publish('onRecenterTo',concept);
   }
 
+
+  self.refresh = function() {
+    self.recenterTo(self.currentConcept);
+  };
+
   self.renderOn = function(wrap) {
-    wrap.append(DOM.h1('Gallery'));
+    ////wrap.append(DOM.h1('Gallery'));
 
+    
 
-    wrap.append(recvCol);
-    wrap.append(msgCol);     
-    wrap.append(respCol);     
-    self.recenterTo(currentConcept);
+    wrap.append(thumb);
+    wrap.append(link);
+    wrap.append(DOM.div().css('clear','both'));
+    wrap.append(back);
+    wrap.append(table);
+    self.recenterTo(self.currentConcept);
     /**
     currentConcept.messageConceptsInvolved().each(function(mc){
       msgCol.append(ZZ.badassLink(mc));

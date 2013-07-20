@@ -21,9 +21,11 @@ body.home #results table td img { width: 80px; }
 
 .handle { border-radius: 1em; margin-left: 1em; background: #0af; cursor: pointer }
 
-ul.search-results { list-style-type: none; line-height: 2em; }
+ul.search-results { list-style-type: none; line-height: 2em; margin: 0; padding: 0; }
 ul.search-results li { list-style-type: none; line-height: 2em; }
 
+
+#gallery-wrap .thumb { width: 50%; }
 
 #gallery-wrap .tile:hover { background: red; color: white; cursor: pointer; }
 #gallery-wrap .tile:hover a { background: red; color: white; cursor: pointer; }

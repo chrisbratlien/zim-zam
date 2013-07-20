@@ -11,7 +11,7 @@ BSD.PubSub = function(spec) {
   self.publish = function(topic,payload) {
     ////console.log('Huggy: publish',topic,payload);
     if (typeof callbacks[topic] == "undefined") {
-      console.log('no subscribers to ' + topic);
+      //console.log('no subscribers to ' + topic);
       return false;
     }
 

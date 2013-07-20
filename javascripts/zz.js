@@ -7,6 +7,8 @@ ZZ.Concept = false; //slot
 
 ZZ.keycodes = {
     TAB: 9,
+    "RETURN": 13,
+    ENTER: 13,
     PERIOD: 46,
     DOWN: 40,
     UP: 38,
@@ -298,7 +300,7 @@ ZZ.Widgets.NewConceptFormV1 = function(spec) {
       var responseText = input.val();        
       if (responseText.length > 0) {
         newConceptAndZam({ message: spec.lang, response: responseText },function(o) { 
-          console.log('got an Oh',o);
+          ///console.log('got an Oh',o);
           responseSpan.append(DOM.a().attr('href','/concept/' + o.id).html(responseText));
         });
       }
@@ -497,6 +499,8 @@ ZZ.Widgets.ConceptSearch = function(spec) {
   });
   
   self.focus = function() {
+    ///console.log('i was told to focus');
+    
     textBox.focus();
   }
 
@@ -591,8 +595,13 @@ ZZ.Widgets.ConceptSearch = function(spec) {
   self.renderOn = function(wrap) {
     textBox.keyup(function(e){
       var c = e.keyCode || e.which;
+        //console.log('KEYUP EVENT!!!!',c);        
+        
+        
+      if (c == ZZ.keycodes.RETURN) {
+        self.publish('enter/return pressed',self);
+      }
       if (c == ZZ.keycodes.TAB) { 
-        ///console.log('KEYUP TAB EVEN!!!!');        
         if (results.length == 1) {
           return false; //we're already at the result we want. keydown would have already handled this stoner.beg
         }
@@ -644,11 +653,46 @@ ZZ.Widgets.Trainer = function(spec) {
   self.publish = backplane.publish;
   self.subscribe = backplane.subscribe;
 
-
   var inputs = {
     receiver: spec.concept,
     message: false,
     response: false
+  };
+    var messageSearchWidget = ZZ.Widgets.ConceptSearch({
+      placeholder: 'message search',
+      callback: function(concept) {
+        inputs.message = concept;
+        ///console.log('inputs',inputs);
+      }
+    });
+
+  var responseSearchWidget = ZZ.Widgets.ConceptSearch({
+    placeholder: 'response search',
+    callback: function(concept) {
+      inputs.response = concept;
+      ////console.log('inputs',inputs);
+    }
+  });
+  
+  self.save = function() {
+    inputs.response = inputs.response || responseSearchWidget.text(); /// dual purpose!! :D
+    var failure = ['receiver','message','response'].detect(function(prop){
+      return inputs[prop] == false; 
+    });
+    if (failure) {
+      alert('missing ' + failure);
+      return false;
+    }      
+    if (typeof inputs.response == "string") {
+      newZam({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response },function(z) {
+        backplane.publish('onSave',z);
+      });
+    }
+    else {
+      newZim({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response.id },function(z) {
+        backplane.publish('onSave',z);
+      });      
+    }      
   };
 
   self.renderOn = function(wrap) {
@@ -683,13 +727,14 @@ ZZ.Widgets.Trainer = function(spec) {
     tdReceiver.html(ZZ.badassLink(spec.concept));
         
     var tdMessage = DOM.td();
-    var messageSearchWidget = ZZ.Widgets.ConceptSearch({
-      placeholder: 'message search',
-      callback: function(concept) {
-        inputs.message = concept;
-        ///console.log('inputs',inputs);
-      }
+    
+    backplane.subscribe('onSave',function(o){
+      ///console.log('wheee');
+      setTimeout(function(){
+            messageSearchWidget.focus();
+      },300);
     });
+    
     messageSearchWidget.renderOn(tdMessage); 
     
     
@@ -697,72 +742,24 @@ ZZ.Widgets.Trainer = function(spec) {
     
     var saveButton = DOM.button('Save').addClass('btn btn-primary pull-right');
     saveButton.click(function() {
-      ///console.log('save',inputs);
-      
-      
-      
-      inputs.response = inputs.response || responseSearchWidget.text(); /// dual purpose!! :D
-
-
-
-      /***
-      console.log('inputs',inputs);
-      console.log('text?',responseSearchWidget.text());
-      console.log('SAAAVE');
-      return false;
-      ***/
-      
-      
-      var failure = ['receiver','message','response'].detect(function(prop){
-        return inputs[prop] == false; 
-      });
-      if (failure) {
-        alert('missing ' + failure);
-        return false;
-      }      
-      if (typeof inputs.response == "string") {
-        newZam({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response },function(z) {
-          backplane.publish('onSave',z);
-        });
-      }
-      else {
-        newZim({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response.id },function(z) {
-          backplane.publish('onSave',z);
-        });      
-      }      
+      self.save();
     });
-    var responseSearchWidget = ZZ.Widgets.ConceptSearch({
-      placeholder: 'response search',
-      callback: function(concept) {
-        inputs.response = concept;
-        console.log('inputs',inputs);
-      }
-    });
+    
     messageSearchWidget.subscribe('blur',function(o){
       ////console.log('OMG I HEARD THAT');
       responseSearchWidget.focus();
     });
+    
+    
+    responseSearchWidget.subscribe('enter/return pressed',function(o) {
+      self.save();
+    });
+
 
 
     responseSearchWidget.renderOn(tdResponse);
 
 
-
-
-
-    /*
-    var responseTextBox = DOM.input();
-    responseTextBox.change(function(){
-      inputs.response = this.value;
-        console.log('inputs',inputs);
-    });
-    
-    
-    var textLabel = DOM.label('or the text <br/>');
-    textLabel.append(responseTextBox);
-    tdResponse.append(textLabel);    
-    */
-    
     tdResponse.append(DOM.div('&nbsp;').css('clear','both'));
     
     var tdSave = DOM.td();
@@ -774,8 +771,11 @@ ZZ.Widgets.Trainer = function(spec) {
     row.append(tdSave);    
     table.append(row);
     
-    
     wrap.append(table);
+
+
+    messageSearchWidget.focus();
+
   };
 
   return self;  
@@ -786,6 +786,7 @@ ZZ.Widgets.Trainer = function(spec) {
 
   function newConcept(callback) {
     jQuery.ajax({
+      type: 'POST',
       url: '/ws',
       data: { 
         action: 'new_concept'
@@ -805,6 +806,7 @@ ZZ.Widgets.Trainer = function(spec) {
 
   function newZam(spec,callback) {
     jQuery.ajax({
+      type: 'POST',
       url: '/ws',
       data: { 
         action: 'new_zam', 
@@ -839,6 +841,7 @@ ZZ.Widgets.Trainer = function(spec) {
       return "COULD NOT DELETE!!!!";
     }
     jQuery.ajax({
+      type: 'POST',
       url: '/ws',
       data: { 
         action: 'delete_zam', 
@@ -855,6 +858,7 @@ ZZ.Widgets.Trainer = function(spec) {
   
   function newConceptAndZam(spec,callback) {  
     jQuery.ajax({
+      type: 'POST',
       url: '/ws',
       data: { 
         action: 'new_concept_and_zam', 
@@ -873,6 +877,7 @@ ZZ.Widgets.Trainer = function(spec) {
   function newZim(spec,callback) {
   
     jQuery.ajax({
+      type: 'POST',
       url: '/ws',
       data: { 
         action: 'new_zim', 
@@ -896,6 +901,7 @@ ZZ.Widgets.Trainer = function(spec) {
 
   function updateZamResponse(o,callback) {
     jQuery.ajax({
+      type: 'POST',
       url: '/ws',
       data: { 
         action: 'update_zam_response', 
@@ -1026,7 +1032,7 @@ ZZ.Reader = function(spec) {
         accum = responses.conceptResponses[0]
       }
       else {
-        console.log('died at',o.current,o);
+        ////console.log('died at',o.current,o);
         return "ERROR";
       }
       
@@ -1121,11 +1127,11 @@ ZZ.Widgets.Uploader = function(spec) {
     logoFileInput.change(function() {
       self.uploadFiles('/ws', this.files);
     });
-    wrap.append(logoFileInput);
-    var urlLabel = DOM.label('or, an image URL');
-    var glyphURLInput = DOM.input();
+
+    var glyphURLInput = DOM.input().addClass('search-box search-query').attr('placeholder','URL');
     glyphURLInput.change(function() {
       jQuery.ajax({
+        type: 'POST',
         url: '/ws',
         data: { 
         action: 'get_glyph_from_url', 
@@ -1138,8 +1144,12 @@ ZZ.Widgets.Uploader = function(spec) {
         }
       });
     });
-    urlLabel.append(glyphURLInput);
-    wrap.append(urlLabel);
+
+    wrap.append(glyphURLInput);
+    //wrap.append(DOM.div().css('clear','both'));
+    wrap.append(logoFileInput);
+
+
   };
   self.reveal = function(url) {
     thumb.attr('src',url);

@@ -112,7 +112,7 @@ $lang = current_language();
       });
       trainer.renderOn(trainerWrap);
       trainer.subscribe('onSave',function(z) {
-        console.log('onSave!!');
+        //console.log('onSave!!');
         gallery.refresh();
       });
     });

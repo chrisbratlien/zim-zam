@@ -1288,11 +1288,14 @@ ZZ.Widgets.Gallery = function(spec) {
 				ZZ.cache.zamsInvolving[concept.id] = reduced;
         ***/
         
-        ZZ.cache.removeZam(z);
         
 
-        ZZ.deleteZam(z,function() {
-          self.refresh();  
+        ZZ.deleteZam(z,function(response) {
+          ///console.log('response',response);
+          if (response.match(/OK/)) {
+            ZZ.cache.removeZam(z);
+            self.refresh();  
+          }
         });
       });
       tdDelete.append(deleteButton);

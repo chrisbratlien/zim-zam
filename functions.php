@@ -529,14 +529,20 @@ add_action('ws_new_zam',function($opts){
 
 
 function delete_zam($opts) {
+
+
   $zam_id = $opts['zam_id'];
+  $api_key = $opts['zzak'];
+
   preg_match('/^\d+$/',$zam_id) or die('invalid zam_id');
+  (ZZ_API_KEY == $api_key) or die('invalid zzak');
   
   $sql = sprintf('DELETE FROM `zam` WHERE zam_id = %d',$zam_id);
   //print_r($sql);
   //exit;
   $q = mysql_query($sql);
-  return mysql_error();
+  //return mysql_error();
+  return 'OK';
 }
 
 

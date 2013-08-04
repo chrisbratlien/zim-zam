@@ -102,12 +102,8 @@ $lang = current_language();
 
 
       var trainerWrap = jQuery('#trainer-wrap');    
-
-    ///refreshTrainer(ZZ.thisConcept);
-    gallery.subscribe('onRecenterTo',function(concept) {
-      trainerWrap.empty();
       var trainer = ZZ.Widgets.Trainer({
-        concept: concept, 
+        concept: ZZ.thisConcept
         ///callback: gallery.refresh
       });
       trainer.renderOn(trainerWrap);
@@ -115,11 +111,12 @@ $lang = current_language();
         //console.log('onSave!!');
         gallery.refresh();
       });
-    });
     gallery.refresh();
 
-
-
+    ///refreshTrainer(ZZ.thisConcept);
+    gallery.subscribe('onRecenterTo',function(concept) {
+        trainer.recenterTo(concept);
+    });
 
 
 

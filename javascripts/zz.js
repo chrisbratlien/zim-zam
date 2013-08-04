@@ -93,22 +93,24 @@ ZZ.cache.addZam = function(zam) {
   ZZ.cache.zamsInvolving[zam.spec.message].push(zam);
 }
 
+ZZ.cache.removeZim = function(z) {
+  function helper(conceptID) {
+    if (typeof ZZ.cache.zimsInvolving[conceptID] == "undefined") {
+      ZZ.cache.zimsInvolving[conceptID] = [];
+    }
+    var cached = ZZ.cache.zimsInvolving[conceptID];
+    var reduced = cached.select(function(cz) { return cz.zim_id != z.zim_id; });
+    ZZ.cache.zimsInvolving[conceptID] = reduced;
+  }
+  
+  helper(z.spec.receiver);
+  helper(z.spec.message);
+}
+
+
+
 
 ZZ.cache.removeZam = function(z) {
-
-  /**
-  if (typeof ZZ.cache.zamsInvolving[zam.spec.receiver] == "undefined") {
-    ZZ.cache.zamsInvolving[zam.spec.receiver] = [];
-  }
-  if (typeof ZZ.cache.zamsInvolving[zam.spec.message] == "undefined") {
-    ZZ.cache.zamsInvolving[zam.spec.message] = [];
-  }
-  if (typeof ZZ.cache.zamsInvolving[zam.spec.response] == "undefined") {
-    ZZ.cache.zamsInvolving[zam.spec.response] = [];
-  }
-  ***/
-
-
   function helper(conceptID) {
     if (typeof ZZ.cache.zamsInvolving[conceptID] == "undefined") {
       ZZ.cache.zamsInvolving[conceptID] = [];
@@ -317,9 +319,17 @@ ZZ.badassLink = function(concept) {
 
     var glyphs = concept.glyphURLs();
     var link = DOM.a().attr('href',concept.linkify());
+
+
+    if (glyphs.length > 0) {
+      var url = glyphs.shift();
+      link.append(DOM.img().attr('src',url).attr('width','20px'));
+    }
+    /**
     glyphs.each(function(url) {     
       link.append(DOM.img().attr('src',url).attr('width','20px'));
     });
+    **/
 
     /*****
     if (translations.length == 0) {
@@ -574,6 +584,11 @@ ZZ.Widgets.ConceptSearch = function(spec) {
   };
 
 
+  self.reset = function() {
+    self.publish('search-results',[]);
+    textBox.val('');
+    choice = false;
+  };
 
   backplane.subscribe('search-results',function(concepts) {
     results = concepts;
@@ -658,13 +673,14 @@ ZZ.Widgets.Trainer = function(spec) {
     message: false,
     response: false
   };
-    var messageSearchWidget = ZZ.Widgets.ConceptSearch({
-      placeholder: 'message search',
-      callback: function(concept) {
-        inputs.message = concept;
-        ///console.log('inputs',inputs);
-      }
-    });
+  
+  var messageSearchWidget = ZZ.Widgets.ConceptSearch({
+    placeholder: 'message search',
+    callback: function(concept) {
+      inputs.message = concept;
+      ///console.log('inputs',inputs);
+    }
+  });
 
   var responseSearchWidget = ZZ.Widgets.ConceptSearch({
     placeholder: 'response search',
@@ -673,6 +689,14 @@ ZZ.Widgets.Trainer = function(spec) {
       ////console.log('inputs',inputs);
     }
   });
+  
+  self.recenterTo = function(concept) {
+    inputs.receiver = concept;
+    inputs.message = false;
+    inputs.response = false;
+    self.refresh();
+  };
+  
   
   self.save = function() {
     inputs.response = inputs.response || responseSearchWidget.text(); /// dual purpose!! :D
@@ -683,6 +707,13 @@ ZZ.Widgets.Trainer = function(spec) {
       alert('missing ' + failure);
       return false;
     }      
+
+
+    //console.log('inputs',inputs);
+    //return false;
+
+
+
     if (typeof inputs.response == "string") {
       newZam({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response },function(z) {
         backplane.publish('onSave',z);
@@ -695,22 +726,34 @@ ZZ.Widgets.Trainer = function(spec) {
     }      
   };
 
-  self.renderOn = function(wrap) {
 
-    var translations = spec.concept.textResponsesToConcept(ZZ.langConcept);
-    var header = DOM.h2();
+
+  var header = DOM.h2();
+    var tdReceiver = DOM.td();
+
+
+  self.refresh = function() {
+    ////console.log('refresh called asdf');
+  
+    header.empty();
+    var translations = inputs.receiver.textResponsesToConcept(ZZ.langConcept);
     header.append(DOM.span('Train '));
-    
     if (translations.length == 0) {
-      header.append(ZZ.badassLink(spec.concept));
+      header.append(ZZ.badassLink(inputs.receiver));
     }
     else {
-      header.append(DOM.a(translations[0]).attr('href',spec.concept.linkify()));
+      header.append(DOM.a(translations[0]).attr('href',inputs.receiver.linkify()));
     }
     header.append(DOM.span(' how to respond'));
-    wrap.append(header);
-  
-  
+
+    tdReceiver.html(ZZ.badassLink(inputs.receiver));
+
+    messageSearchWidget.reset();
+    responseSearchWidget.reset();
+  };
+
+  self.renderOn = function(wrap) {
+
   
     var table = DOM.table().addClass('table table-striped table-bordered table-condensed');
     
@@ -723,8 +766,6 @@ ZZ.Widgets.Trainer = function(spec) {
     
     var row = DOM.tr();
     
-    var tdReceiver = DOM.td();
-    tdReceiver.html(ZZ.badassLink(spec.concept));
         
     var tdMessage = DOM.td();
     
@@ -771,10 +812,12 @@ ZZ.Widgets.Trainer = function(spec) {
     row.append(tdSave);    
     table.append(row);
     
+    wrap.append(header);
     wrap.append(table);
 
 
     messageSearchWidget.focus();
+    self.refresh(wrap);  
 
   };
 
@@ -825,6 +868,34 @@ ZZ.Widgets.Trainer = function(spec) {
 
 
 
+  ZZ.deleteZim = function(o,callback) {
+    var zim_id = false;
+    switch(typeof o) {
+      case 'object':
+        zim_id = o.zim_id;      
+        break;
+      case 'number':
+        zim_id = o;      
+        break;
+      default:
+        break;
+    };
+    if (! zim_id) {
+      return "COULD NOT DELETE!!!!";
+    }
+    jQuery.ajax({
+      type: 'POST',
+      url: '/ws',
+      data: { 
+        action: 'delete_zim', 
+        zim_id: zim_id,
+        zzak: prompt('API Key')
+      },
+      success: callback
+    });
+  };
+  
+  
   ZZ.deleteZam = function(o,callback) {
     var zam_id = false;
     switch(typeof o) {
@@ -990,6 +1061,9 @@ ZZ.Widgets.Trainer = function(spec) {
 
 
 ZZ.cache.glyphURLConcept = ZZ.Concept({ id: getZamReceivers(1,'glyph url')[0] });
+ZZ.cache.youtubeURLConcept = ZZ.Concept({ id: getZamReceivers(1,'youtube url')[0] });
+ZZ.cache.latitudeConcept = ZZ.Concept({ id: getZamReceivers(1,'latitude')[0] });
+ZZ.cache.longitudeConcept = ZZ.Concept({ id: getZamReceivers(1,'longitude')[0] });
 
 
 ZZ.Reader = function(spec) {
@@ -1103,6 +1177,10 @@ get_first_zam_receiver(1,'glyph url'));
 ZZ.Widgets.Uploader = function(spec) {
   var self = {};
   var thumb = DOM.img().attr('display','none').css('width','40px');
+  var logoFileInput = DOM.input().attr('type','file');
+  var glyphURLInput = DOM.input().addClass('search-box search-query').attr('placeholder','URL');
+
+
   self.uploadFiles = function(url, files) {
     //found some of this here: http://www.html5rocks.com/en/tutorials/file/xhr2/
     var formData = new FormData();
@@ -1123,12 +1201,10 @@ ZZ.Widgets.Uploader = function(spec) {
   self.renderOn = function(wrap) {
     wrap.append(DOM.h1('glyph uploader'));
     wrap.append(thumb);
-    var logoFileInput = DOM.input().attr('type','file');
     logoFileInput.change(function() {
       self.uploadFiles('/ws', this.files);
     });
 
-    var glyphURLInput = DOM.input().addClass('search-box search-query').attr('placeholder','URL');
     glyphURLInput.change(function() {
       jQuery.ajax({
         type: 'POST',
@@ -1155,6 +1231,8 @@ ZZ.Widgets.Uploader = function(spec) {
     thumb.attr('src',url);
     thumb.show();  
     spec.gossip.publish('new-upload-url',url);
+    logoFileInput.val('');
+    glyphURLInput.val('');  
   }
   return self;
 };
@@ -1180,29 +1258,54 @@ ZZ.Widgets.Gallery = function(spec) {
 
 
   var link = DOM.a();
-  var thumb = DOM.img().addClass('thumb');
+
+
+
+  //var thumb = DOM.img().addClass('thumb');
+
+  var thumbsDiv = DOM.div().addClass('thumbs');
+  var thumbs = [];
+
+
+
+
   var table = DOM.table().addClass('table');
   var back = DOM.button('Back').addClass('btn btn-mini btn-inverse');
 
   back.click(function(){
+    console.log('back click');
     if (history.length < 2) { return false; }
     history.pop();
     self.recenterTo(history.pop());    
   });
 
+
+  self.refreshThumb = function(concept) {
+    thumbsDiv.empty();        
+    var glyphURLs = concept.glyphURLs();
+    var thumbsClass = 'thumb-' + glyphURLs.length;
+    glyphURLs.each(function(gu){
+      var thumb = DOM.img().addClass(thumbsClass);
+      thumb.attr('src',gu);
+      thumbsDiv.append(thumb);
+    });
+  };
+
+
   self.recenterTo = function(concept) {
     self.currentConcept = concept;
     history.push(concept);
-
-
-    var gu = concept.glyphURLs().shift();
-    thumb.attr('src',gu);
     
+  
+    self.refreshThumb(concept);  
+
+
     link.html('');
     var langAnswer = concept.receive(ZZ.langConcept);
-    link.html(DOM.h2(langAnswer.textResponses.shift() || ''));
+    link.html(langAnswer.textResponses.shift() || '');
     link.attr('href',concept.linkify());
-    
+
+
 
     table.empty();
     
@@ -1214,8 +1317,7 @@ ZZ.Widgets.Gallery = function(spec) {
     headerRow.append(DOM.td('<strong>response</strong> (responds with...)'));
     headerRow.append(DOM.td('&nbsp;'));    
     table.append(headerRow);
-    
-    
+
     concept.zimsInvolved().each(function(z) {
       var row = DOM.tr();
 
@@ -1241,28 +1343,29 @@ ZZ.Widgets.Gallery = function(spec) {
       var tdDelete = DOM.td();
       var deleteButton = DOM.button('Delete').addClass('btn btn-mini btn-danger');
       deleteButton.click(function(){
-        /*
-        ZZ.deleteZim(z,function() {
-          self.refresh();  
+        ZZ.deleteZim(z,function(response) {
+          ///console.log('response',response);
+          if (response.match(/OK/)) {
+            ZZ.cache.removeZim(z);
+            self.refresh();  
+          }
         });
-        */
       });
       tdDelete.append(deleteButton);
       row.append(tdDelete);
-      
-      
-
       table.append(row);
     });
 
     concept.zamsInvolved().each(function(z) {
 
       var row = DOM.tr();
-      
       var recvTile = DOM.td().addClass('tile');
       var recvC = z.receiverConcept();
       recvTile.append(ZZ.badassLink(recvC));
-      recvTile.click(function() { self.recenterTo(recvC); });
+      recvTile.click(function() { 
+        ////console.log('cliiick');
+        self.recenterTo(recvC); 
+      });
       row.append(recvTile);
 
 
@@ -1280,16 +1383,7 @@ ZZ.Widgets.Gallery = function(spec) {
 
       var tdDelete = DOM.td();
       var deleteButton = DOM.button('Delete').addClass('btn btn-mini btn-danger');
-      deleteButton.click(function(){
-      				
-        /***
-				var cached = ZZ.cache.zamsInvolving[concept.id];
-				var reduced = cached.select(function(a) { return a.zam_id != z.zam_id; });
-				ZZ.cache.zamsInvolving[concept.id] = reduced;
-        ***/
-        
-        
-
+      deleteButton.click(function(){        
         ZZ.deleteZam(z,function(response) {
           ///console.log('response',response);
           if (response.match(/OK/)) {
@@ -1304,9 +1398,11 @@ ZZ.Widgets.Gallery = function(spec) {
 
       table.append(row);
     });
-    
+
     self.publish('onRecenterTo',concept);
-  }
+
+    return false;////////////////ZING!!!
+  };
 
 
   self.refresh = function() {
@@ -1315,10 +1411,7 @@ ZZ.Widgets.Gallery = function(spec) {
 
   self.renderOn = function(wrap) {
     ////wrap.append(DOM.h1('Gallery'));
-
-    
-
-    wrap.append(thumb);
+    wrap.append(thumbsDiv);
     wrap.append(link);
     wrap.append(DOM.div().css('clear','both'));
     wrap.append(back);

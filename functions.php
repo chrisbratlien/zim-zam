@@ -544,15 +544,36 @@ function delete_zam($opts) {
   //return mysql_error();
   return 'OK';
 }
-
-
-
 add_action('ws_delete_zam',function($opts){  
   $result = delete_zam($opts);
   ///////print_r($result);
   echo json_encode($result);
   exit;
 });
+
+
+
+function delete_zim($opts) {
+  $zim_id = $opts['zim_id'];
+  $api_key = $opts['zzak'];
+
+  preg_match('/^\d+$/',$zim_id) or die('invalid zim_id');
+  (ZZ_API_KEY == $api_key) or die('invalid zzak');
+  
+  $sql = sprintf('DELETE FROM `zim` WHERE zim_id = %d',$zim_id);
+  //print_r($sql);
+  //exit;
+  $q = mysql_query($sql);
+  //return mysql_error();
+  return 'OK';
+}
+add_action('ws_delete_zim',function($opts){  
+  $result = delete_zim($opts);
+  ///////print_r($result);
+  echo json_encode($result);
+  exit;
+});
+
 
 
 add_action('ws_new_concept_and_zam',function($opts){  
@@ -645,7 +666,7 @@ function foo_zam_search($str) {
   $wheres = Array();
   $lang = 1;
   array_push($wheres,sprintf('response LIKE "%s"','%' . mysql_escape_string($str) . '%'));
-  array_push($wheres,sprintf('message = %d',$lang));
+  ///NOTE: why limit this?!? ///array_push($wheres,sprintf('message = %d',$lang));
   $result = get_zams_where($wheres);
   $specs = array_map(function ($e) { return $e->spec; },$result);
   echo json_encode($specs);

@@ -14,7 +14,7 @@ The zam table. Text translations of concepts observed from the point-of-view of 
 ![zam table](http://github.com/chrisbratlien/zim-zam/raw/master/zam.png)
 
 
-"apple is a fruit" is encoded as 5-4-6, but this knowledge is not coupled to the English language. The 5-4-6 relationship remains true in whatever language.
+"apple is a fruit" is encoded as 5-4-6, but this knowledge is not tightly coupled to the English language. The 5-4-6 relationship remains true in whatever language.
 
 It only has the appearance of English when we throw the concept of 1 (in english) at it.
 

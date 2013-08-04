@@ -28,6 +28,7 @@ ul.search-results { list-style-type: none; line-height: 2em; margin: 0; padding:
 ul.search-results li { list-style-type: none; line-height: 2em; }
 
 
+#gallery-wrap .thumb-1 { width: 49%; }
 #gallery-wrap .thumb-2 { width: 49%; }
 #gallery-wrap .thumb-3 { width: 32%; }
 #gallery-wrap .thumb-4 { width: 24%; }

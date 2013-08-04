@@ -3,11 +3,14 @@ zim-zam
 
 language-agnostic knowledge-base
 
+![screenshot](http://github.com/chrisbratlien/zim-zam/raw/master/screenshot.png)
+
+
 The zim table. Pure concepts relating to other pure concepts    
 ![zim table](http://github.com/chrisbratlien/zim-zam/raw/master/zim.png)
 
 
-The zam table. Written interpretations of concepts in a given language    
+The zam table. Text translations of concepts observed from the point-of-view of another concept    
 ![zam table](http://github.com/chrisbratlien/zim-zam/raw/master/zam.png)
 
 

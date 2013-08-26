@@ -58,8 +58,8 @@ ZZ.Zam = function(spec) {
 ZZ.cache = {};
 
 
-ZZ.cache.zam_id = {};
-ZZ.cache.zim_id = {};
+////ZZ.cache.zam_id = {};
+////ZZ.cache.zim_id = {};
 
 
 
@@ -85,15 +85,18 @@ ZZ.cache.addZim = function(zim) {
 }
 
 ZZ.cache.addZam = function(zam) {
+  //console.log('cache add zam',zam);
   if (typeof ZZ.cache.zamsInvolving[zam.spec.receiver] == "undefined") {
     ZZ.cache.zamsInvolving[zam.spec.receiver] = [];
   }
-  if (typeof ZZ.cache.zamsInvolving[zam.spec.message] == "undefined") {
-    ZZ.cache.zamsInvolving[zam.spec.message] = [];
-  }
-
   ZZ.cache.zamsInvolving[zam.spec.receiver].push(zam);
-  ZZ.cache.zamsInvolving[zam.spec.message].push(zam);
+
+
+  //TODO: need to rethink this and how it's tested for in other places
+  //if (typeof ZZ.cache.zamsInvolving[zam.spec.message] == "undefined") {
+  //  ZZ.cache.zamsInvolving[zam.spec.message] = [];
+  //}
+  //ZZ.cache.zamsInvolving[zam.spec.message].push(zam);
 }
 
 ZZ.cache.removeZim = function(z) {
@@ -177,7 +180,13 @@ ZZ.Concept = function(spec) { //spec needs an id
   };
 
   self.zamsInvolved = function() {
+    //console.log('zamsInvolved was called for',self);
+    //console.log('cache',ZZ.cache);
     var hits = ZZ.cache.zamsInvolving[spec.id];
+    
+    ////console.log('hits',hits);
+    
+    
     if (typeof hits != "undefined" && hits.length > 0) {
       return hits;
     }
@@ -187,11 +196,20 @@ ZZ.Concept = function(spec) { //spec needs an id
       data: { action: 'batch_get_zams_involving', concept_ids: spec.id },
       async: false
     }).responseText;
-    var zams = eval('(' + r + ')');
+    var zamSpecs = eval('(' + r + ')');
 
+    var zams = zamSpecs.map(function(spec) { return ZZ.Zam(spec); });
+    zams.each(function(zam){
+      ZZ.cache.addZam(zam);
+    });
+
+    return zams;
+    /*
     var conjured = zams.map(function(spec) { return ZZ.Zam(spec); });
     ZZ.cache.zamsInvolving[spec.id] = conjured;
     return conjured;      
+    */
+    
   };
 
   self.conceptResponsesToConcept = function(other) {
@@ -1020,7 +1038,8 @@ ZZ.Widgets.Trainer = function(spec) {
     var zims = eval('(' + r + ')');
     var conjured = zims.map(function(spec) { return ZZ.Zim(spec); });
     conjured.each(function(zim) {
-      ZZ.cache.zim_id[zim.zim_id] = zim;
+      ////ZZ.cache.zim_id[zim.zim_id] = zim;
+      ZZ.cache.addZim(zim);      
     });
     return conjured;      
   }
@@ -1039,7 +1058,7 @@ ZZ.Widgets.Trainer = function(spec) {
     var zams = eval('(' + r + ')');
     var conjured = zams.map(function(spec) { return ZZ.Zam(spec); });
     conjured.each(function(zam) {
-      ZZ.cache.zam_id[zam.zam_id] = zam;
+      ///ZZ.cache.zam_id[zam.zam_id] = zam;
       ZZ.cache.addZam(zam);      
     });
     return conjured;      

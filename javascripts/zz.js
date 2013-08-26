@@ -215,6 +215,10 @@ ZZ.Concept = function(spec) { //spec needs an id
     return result;
   };
   
+  
+  
+  
+  
   self.receive = function(messageConcept) {
     var result = {
       conceptResponses: self.conceptResponsesToConcept(messageConcept),
@@ -521,9 +525,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
 
   var stoner = ZZ.Widgets.Procrastinator({
     callback: function() {
-      ////console.log('STONER CALLBACK');
-    
-      ////console.log(textBox.val());
+
       var query = textBox.val();
       if (query.length == 0 ) { 
         backplane.publish('search-results',[]); //empty    
@@ -538,10 +540,19 @@ ZZ.Widgets.ConceptSearch = function(spec) {
         async: false
       }).responseText;
       var zams = eval('(' + r + ')');
+
+      
+      //////console.log('zams',zams);
+      var filtered = [];
+      var dupe = {};
+      zams.each(function(zam){
+        if (typeof dupe[zam.receiver] == "undefined") {
+          filtered.push(zam);
+          dupe[zam.receiver] = 'ok';
+        }
+      });
   
-      var conjured = zams.map(function(spec) { return ZZ.Zam(spec).receiverConcept(); });
-      ///////ZZ.cache.zamsInvolving[spec.id] = conjured;
-      //console.log('conjured',conjured);
+      var conjured = filtered.map(function(spec) { return ZZ.Zam(spec).receiverConcept(); });
       backplane.publish('search-results',conjured);
     }  
   });
@@ -869,6 +880,16 @@ ZZ.Widgets.Trainer = function(spec) {
   }
 
 
+  function makeConceptIfNotExists(englishText,callback) {
+    var id = getFirstZamReceiver(1,englishText);
+    if (!id) {
+      newConceptAndZam({
+        message: 1, //in English
+        response: englishText
+      },callback);
+    }
+  }
+
 
   ZZ.deleteZim = function(o,callback) {
     var zim_id = false;
@@ -1019,6 +1040,7 @@ ZZ.Widgets.Trainer = function(spec) {
     var conjured = zams.map(function(spec) { return ZZ.Zam(spec); });
     conjured.each(function(zam) {
       ZZ.cache.zam_id[zam.zam_id] = zam;
+      ZZ.cache.addZam(zam);      
     });
     return conjured;      
   }
@@ -1029,8 +1051,9 @@ ZZ.Widgets.Trainer = function(spec) {
       response: resp
     });
     
+    them.each(function(z) { ZZ.cache.addZam(z); });
+        
     return them.map(function(z) { return z.receiver; });
-  
   }
   
   function getFirstZamReceiver(msg,resp) {
@@ -1161,21 +1184,6 @@ ZZ.Reader = function(spec) {
   
   return self;
 }
-
-
-/*
-function get_zam_receivers($msg,$response) {
-  $receivers = array_map(function($zam) { return $zam->receiver; },get_zams_with_message_and_response($msg,$response));
-  return $receivers;
-}
-
-
-
-  
-get_first_zam_receiver(1,'glyph url'));  
-*/
-
-
 
 
 ZZ.Widgets.Uploader = function(spec) {

@@ -672,8 +672,7 @@ function foo_zam_search($str) {
   ///NOTE: why limit this?!? ///array_push($wheres,sprintf('message = %d',$lang));
   $result = get_zams_where($wheres);
   $specs = array_map(function ($e) { return $e->spec; },$result);
-  echo json_encode($specs);
-  exit;  
+  return $specs; 
 }
 
 

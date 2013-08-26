@@ -1,7 +1,7 @@
 # BEGIN WordPress
 <IfModule mod_rewrite.c>
 RewriteEngine On
-RewriteBase /
+RewriteBase /my35alerts/zim-zam
 RewriteRule ^index\.php$ - [L]
 
 

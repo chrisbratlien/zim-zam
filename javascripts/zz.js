@@ -832,7 +832,7 @@ ZZ.Widgets.Trainer = function(spec) {
   function newConcept(callback) {
     jQuery.ajax({
       type: 'POST',
-      url: '/ws',
+      url: ZZ.baseURL + '/ws',
       data: { 
         action: 'new_concept'
       },
@@ -852,7 +852,7 @@ ZZ.Widgets.Trainer = function(spec) {
   function newZam(spec,callback) {
     jQuery.ajax({
       type: 'POST',
-      url: '/ws',
+      url: ZZ.baseURL + '/ws',
       data: { 
         action: 'new_zam', 
         receiver: spec.receiver,
@@ -887,7 +887,7 @@ ZZ.Widgets.Trainer = function(spec) {
     }
     jQuery.ajax({
       type: 'POST',
-      url: '/ws',
+      url: ZZ.baseURL + '/ws',
       data: { 
         action: 'delete_zim', 
         zim_id: zim_id,
@@ -915,7 +915,7 @@ ZZ.Widgets.Trainer = function(spec) {
     }
     jQuery.ajax({
       type: 'POST',
-      url: '/ws',
+      url: ZZ.baseURL + '/ws',
       data: { 
         action: 'delete_zam', 
         zam_id: zam_id,
@@ -932,7 +932,7 @@ ZZ.Widgets.Trainer = function(spec) {
   function newConceptAndZam(spec,callback) {  
     jQuery.ajax({
       type: 'POST',
-      url: '/ws',
+      url: ZZ.baseURL + '/ws',
       data: { 
         action: 'new_concept_and_zam', 
         ////won't need to supply receiver,the new concept receives the message
@@ -951,7 +951,7 @@ ZZ.Widgets.Trainer = function(spec) {
   
     jQuery.ajax({
       type: 'POST',
-      url: '/ws',
+      url: ZZ.baseURL + '/ws',
       data: { 
         action: 'new_zim', 
         receiver: spec.receiver,
@@ -975,7 +975,7 @@ ZZ.Widgets.Trainer = function(spec) {
   function updateZamResponse(o,callback) {
     jQuery.ajax({
       type: 'POST',
-      url: '/ws',
+      url: ZZ.baseURL + '/ws',
       data: { 
         action: 'update_zam_response', 
         zam_id: o.zam_id,
@@ -1206,13 +1206,13 @@ ZZ.Widgets.Uploader = function(spec) {
     wrap.append(DOM.h1('glyph uploader'));
     wrap.append(thumb);
     logoFileInput.change(function() {
-      self.uploadFiles('/ws', this.files);
+      self.uploadFiles(ZZ.baseURL + '/ws', this.files);
     });
 
     glyphURLInput.change(function() {
       jQuery.ajax({
         type: 'POST',
-        url: '/ws',
+        url: ZZ.baseURL + '/ws',
         data: { 
         action: 'get_glyph_from_url', 
           url: this.value

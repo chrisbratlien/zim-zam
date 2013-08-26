@@ -5,6 +5,9 @@ ZZ.Concept = false; //slot
 
 
 
+ZZ.defaultGlyphURL = 'http://zimzam.dev.bratliensoftware.com/images/zimzam-white.png';
+
+
 ZZ.keycodes = {
     TAB: 9,
     "RETURN": 13,
@@ -246,11 +249,10 @@ ZZ.Concept = function(spec) { //spec needs an id
   };
   
   self.glyphURLs = function() {
-    var defaultGlyphURL = 'http://zimzam.dev.bratliensoftware.com/images/zigzag-line7.gif';
     var resp = self.textResponsesToConcept(ZZ.cache.glyphURLConcept);
     ////console.log('resp',resp);
     if (resp.length == 0) {
-      resp.push(defaultGlyphURL);
+      resp.push(ZZ.defaultGlyphURL);
     }  
     
     var filtered = resp.select(function(u){
@@ -1073,6 +1075,8 @@ ZZ.Reader = function(spec) {
   
     var tokens = stream.split(/\ +/);
   
+    console.log('tokens',tokens);
+  
     /*
     var result = tokens.map(function(token) {
       var receiverConcepts = getZamReceivers(ZZ.lang,token).map(function(id) { return ZZ.Concept({ id: id }); });
@@ -1093,8 +1097,8 @@ ZZ.Reader = function(spec) {
 
 
     var accum = concepts.shift();
-    
-    concepts.eachPCN(function(o) {
+    console.log('concepts??',concepts,concepts.length);
+    eachify(concepts).eachPCN(function(o) {
       ///console.log('o',o);
       
       var responses = accum.receive(o.current);

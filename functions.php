@@ -332,7 +332,7 @@ function concept_url($id) {
 function linkify_concept($id,$lang) {
   $trans = text_translations_of_concept($id,$lang);
   if (empty($trans)) {
-    return sprintf('<a href="%s"><img class="zigzag" src="%s/images/zigzag-line7.gif" /></a>',concept_url($id),get_bloginfo('template_url'));
+    return sprintf('<a href="%s"><img class="zigzag" src="%s/images/zimzam-white.png" /></a>',concept_url($id),get_bloginfo('template_url'));
   }
   return sprintf('<a href="%s">%s</a>',concept_url($id),array_shift($trans));
 }
@@ -411,7 +411,7 @@ function youtube_urls($c) {
 function linkify_concept_with_glyphs($id,$lang) {
   $trans = text_translations_of_concept($id,$lang);
   if (empty($trans)) {
-    return sprintf('<a href="%s"><img class="zigzag" src="%s/images/zigzag-line7.gif" /></a>',concept_url($id),get_bloginfo('template_url'));
+    return sprintf('<a href="%s"><img class="zigzag" src="%s/images/zimzam-white.png" /></a>',concept_url($id),get_bloginfo('template_url'));
   }
 
   $r = '';  
@@ -612,6 +612,9 @@ add_action('ws_get_zams_involving',function($opts){
 
 
 add_action('ws_batch_get_zams_involving',function($opts){  
+  //echo json_encode(Array());
+  //exit;
+  
   $concept_ids = $opts['concept_ids'];
   $result = batch_get_zams_involving($concept_ids);
   $specs = array_map(function ($e) { return $e->spec; },$result);

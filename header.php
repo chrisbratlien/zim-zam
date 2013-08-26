@@ -52,7 +52,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="<?php bloginfo('url'); ?>">ZimZam</a>
+          <a class="brand" href="<?php bloginfo('url'); ?>">ZimZam <img width="20px" src="<?php bloginfo('template_url'); ?>/images/zimzam-white.png" /></a>
           <a class="brand" href="<?php bloginfo('url'); ?>/concept/18">Concept View</a>
           <a class="brand" href="<?php bloginfo('url'); ?>/gallery/18">Gallery View</a>
           <div class="nav-collapse collapse">

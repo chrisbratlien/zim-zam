@@ -13,6 +13,29 @@ add_filter('body_class',function($classes) {
 $concept = new Concept($concept_id);
 
 
+$javascript_concept = new Concept(get_first_zam_receiver(1,'javascript'));
+
+//pp($javascript_concept,'jsc');
+
+
+$ohboy = $concept->text_responses_to_concept($javascript_concept);
+
+////pp($ohboy,'ohboy');
+
+add_action('wp_head',function() use($ohboy) {
+?>
+<script type="text/javascript">
+<?php
+foreach($ohboy as $js) {
+  echo sprintf($js,"%s\n");
+  echo "\n";
+}
+?>
+</script>
+<?php
+});
+
+
 get_header(); 
 //require_language();
 $lang = current_language();
@@ -38,6 +61,10 @@ foreach(youtube_urls($concept) as $url) {
   ////pp($vars,'vars');
   echo sprintf('<iframe width="560" height="315" frameborder="0" allowfullscreen="true" src="http://www.youtube.com/embed/%s" ></iframe>',$vars['v']);
 }
+
+
+
+
 
 
 ?>

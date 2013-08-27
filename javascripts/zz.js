@@ -24,6 +24,12 @@ ZZ.keycodes = {
 ZZ.Zim = function(spec) {
   var self = spec;
   self.spec = spec;
+
+
+  self.hash = function() {
+    return 'zim_id:' + spec.zim_id;
+  }
+
   self.receiverConcept = function() {
     return ZZ.Concept({ id: spec.receiver });
   };
@@ -55,13 +61,11 @@ ZZ.Zam = function(spec) {
 };
 
 
+
+
+
+
 ZZ.cache = {};
-
-
-////ZZ.cache.zam_id = {};
-////ZZ.cache.zim_id = {};
-
-
 
 ZZ.cache.zimsInvolving = {};
 ZZ.cache.zamsInvolving = {};
@@ -196,20 +200,12 @@ ZZ.Concept = function(spec) { //spec needs an id
       data: { action: 'batch_get_zams_involving', concept_ids: spec.id },
       async: false
     }).responseText;
-    var zamSpecs = eval('(' + r + ')');
 
-    var zams = zamSpecs.map(function(spec) { return ZZ.Zam(spec); });
-    zams.each(function(zam){
-      ZZ.cache.addZam(zam);
-    });
+    var zams = eval('(' + r + ')');
 
-    return zams;
-    /*
     var conjured = zams.map(function(spec) { return ZZ.Zam(spec); });
     ZZ.cache.zamsInvolving[spec.id] = conjured;
     return conjured;      
-    */
-    
   };
 
   self.conceptResponsesToConcept = function(other) {
@@ -1029,6 +1025,17 @@ ZZ.Widgets.Trainer = function(spec) {
     if (typeof o.receiver != "undefined") { thisData.receiver = o.receiver; }
     if (typeof o.message != "undefined") { thisData.message = o.message; }
     if (typeof o.response != "undefined") { thisData.response = o.response; }
+
+
+    var hashed = 'zIms-where-' + JSON.stringify(o);    
+    if (typeof ZZ.cache[hashed] != "undefined") {
+      console.log('FOUUUUND THE STRINGY IN THE ZIM CASHY');
+      return ZZ.cache[hashed];
+    }
+    
+
+
+
     var r = jQuery.ajax({
       type: 'POST',
       url: ZZ.baseURL + '/ws',
@@ -1041,14 +1048,29 @@ ZZ.Widgets.Trainer = function(spec) {
       ////ZZ.cache.zim_id[zim.zim_id] = zim;
       ZZ.cache.addZim(zim);      
     });
+
+    ZZ.cache[hashed] = conjured;
+
     return conjured;      
   }
 
   function getZamsWhere(o) {
+  
     var thisData = { action: 'get_zams_where' };
     if (typeof o.receiver != "undefined") { thisData.receiver = o.receiver; }
     if (typeof o.message != "undefined") { thisData.message = o.message; }
     if (typeof o.response != "undefined") { thisData.response = o.response; }
+    
+    
+    var hashed = 'zAms-where-' + JSON.stringify(o);    
+    if (typeof ZZ.cache[hashed] != "undefined") {
+      console.log('FOUUUUND THE STRINGY IN THE ZAM CASHY');
+      return ZZ.cache[hashed];
+    }
+    
+    
+    
+    
     var r = jQuery.ajax({
       type: 'POST',
       url: ZZ.baseURL + '/ws',
@@ -1061,6 +1083,10 @@ ZZ.Widgets.Trainer = function(spec) {
       ///ZZ.cache.zam_id[zam.zam_id] = zam;
       ZZ.cache.addZam(zam);      
     });
+    
+    
+    ZZ.cache[hashed] = conjured;
+    
     return conjured;      
   }
 
@@ -1110,6 +1136,20 @@ ZZ.cache.latitudeConcept = ZZ.Concept({ id: getZamReceivers(1,'latitude')[0] });
 ZZ.cache.longitudeConcept = ZZ.Concept({ id: getZamReceivers(1,'longitude')[0] });
 
 
+ZZ.Poller = function(spec) {
+  var self = {};
+  var pov = spec.pov;
+
+  self.searchZams = function(str) {
+    //get all (ids of) receivers  whom, when sent the message <pov.id>, respond with <str>
+    var them = getZamReceivers(pov.id,str);
+    
+    return them; 
+  };
+  return self;
+};
+
+
 ZZ.Reader = function(spec) {
   var self = {};
   
@@ -1156,17 +1196,6 @@ ZZ.Reader = function(spec) {
         return "ERROR";
       }
       
-      ///console.log('responses',responses);
-      
-      
-      
-      
-      
-      ///var conceptResponses = accum.conceptResponsesToConcept(concept);
-      ////var textResponses = accum.textResponsesToConcept(concept);
-      ////console.log('cR',conceptResponses);
-      ////console.log('tR',textResponses);
-        ///accum = conceptResponses.shift(); 
     });
 
 
@@ -1177,27 +1206,6 @@ ZZ.Reader = function(spec) {
     logic to check what is true
     logic to find out what is true
     */
-    
-    
-    
-
-    ///console.log('result',result);
-    
-    
-    ///return result;
-    
-    /*  
-    eachify(tokens).eachPCN(function(o){
-        console.log('current',o.current,'next',o.next);
-    
-      var receiverConcepts = getZamReceivers(ZZ.lang,o.current).collect(function(id) { return ZZ.Concept({ id: id }); });
-      console.log('receiverConcepts',receiverConcepts);
-    });
-  
-  
-    return 'OK';
-    */
-  
   };
   
   

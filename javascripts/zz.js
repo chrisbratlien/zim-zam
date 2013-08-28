@@ -22,8 +22,18 @@ ZZ.keycodes = {
 
 
 ZZ.Zim = function(spec) {
-  var self = spec;
-  self.spec = spec;
+
+  console.log('constructing myself from spec',spec);
+
+  /////var self = spec;
+  //////self.spec = spec;
+  var self = {};
+
+
+  self.zim_id = spec.zim_id;
+  self.receiver = spec.receiver;
+  self.message = spec.message;
+  self.response = spec.response;
 
 
   self.hash = function() {
@@ -39,11 +49,24 @@ ZZ.Zim = function(spec) {
   self.responseConcept = function() {
     return ZZ.Concept({ id: spec.response });
   };
+  
+  console.log('returning',self);
+  
   return self;
 };
+
+
+
+
 ZZ.Zam = function(spec) {
   var self = spec;
   self.spec = spec;
+
+
+  self.hash = function() {
+    return 'zam_id:' + spec.zam_id;
+  }
+
   self.receiverConcept = function() {
     return ZZ.Concept({ id: spec.receiver });
   };
@@ -72,7 +95,12 @@ ZZ.cache.zamsInvolving = {};
 
 
 
+/**
+
 ZZ.cache.addZim = function(zim) {
+
+  var zimHash = zim.hash();
+
   if (typeof ZZ.cache.zimsInvolving[zim.spec.receiver] == "undefined") {
     ZZ.cache.zimsInvolving[zim.spec.receiver] = [];
   }
@@ -83,25 +111,19 @@ ZZ.cache.addZim = function(zim) {
     ZZ.cache.zimsInvolving[zim.spec.response] = [];
   }
 
-  ZZ.cache.zimsInvolving[zim.spec.receiver].push(zim);
-  ZZ.cache.zimsInvolving[zim.spec.message].push(zim);
-  ZZ.cache.zimsInvolving[zim.spec.response].push(zim);
+  var already = false;
+  
+  already = ZZ.cache.zimsInvolving[zim.spec.receiver].detect(function(zim) { return zim.hash() == zimHash; });
+  if (!already) { ZZ.cache.zimsInvolving[zim.spec.receiver].push(zim); }  
+
+  already = ZZ.cache.zimsInvolving[zim.spec.message].detect(function(zim) { return zim.hash() == zimHash; });
+  if (!already) { ZZ.cache.zimsInvolving[zim.spec.message].push(zim); }  
+
+  already = ZZ.cache.zimsInvolving[zim.spec.response].detect(function(zim) { return zim.hash() == zimHash; });
+  if (!already) { ZZ.cache.zimsInvolving[zim.spec.response].push(zim); }  
+
 }
-
-ZZ.cache.addZam = function(zam) {
-  //console.log('cache add zam',zam);
-  if (typeof ZZ.cache.zamsInvolving[zam.spec.receiver] == "undefined") {
-    ZZ.cache.zamsInvolving[zam.spec.receiver] = [];
-  }
-  ZZ.cache.zamsInvolving[zam.spec.receiver].push(zam);
-
-
-  //TODO: need to rethink this and how it's tested for in other places
-  //if (typeof ZZ.cache.zamsInvolving[zam.spec.message] == "undefined") {
-  //  ZZ.cache.zamsInvolving[zam.spec.message] = [];
-  //}
-  //ZZ.cache.zamsInvolving[zam.spec.message].push(zam);
-}
+***/
 
 ZZ.cache.removeZim = function(z) {
   function helper(conceptID) {
@@ -163,7 +185,10 @@ ZZ.Concept = function(spec) { //spec needs an id
   self.linkify = function() {
     return ZZ.baseURL + '/concept/' + spec.id;
   };  
-
+  
+  self.hash = function() {
+    return 'concept:' + spec.id;
+  };
 
   self.zimsInvolved = function() {
     var hits = ZZ.cache.zimsInvolving[spec.id];
@@ -184,16 +209,12 @@ ZZ.Concept = function(spec) { //spec needs an id
   };
 
   self.zamsInvolved = function() {
-    //console.log('zamsInvolved was called for',self);
-    //console.log('cache',ZZ.cache);
-    var hits = ZZ.cache.zamsInvolving[spec.id];
-    
-    ////console.log('hits',hits);
-    
-    
-    if (typeof hits != "undefined" && hits.length > 0) {
-      return hits;
+    var hashed = 'zAms-Involved-' + self.hash();   
+    if (typeof ZZ.cache[hashed] != "undefined") {
+      console.log('FOUUUUND THE STRINGY IN THE ZAMS-INVOLVED CASHY');
+      return ZZ.cache[hashed];
     }
+
     var r = jQuery.ajax({
       type: 'POST',
       url: ZZ.baseURL + '/ws',
@@ -202,9 +223,10 @@ ZZ.Concept = function(spec) { //spec needs an id
     }).responseText;
 
     var zams = eval('(' + r + ')');
-
     var conjured = zams.map(function(spec) { return ZZ.Zam(spec); });
-    ZZ.cache.zamsInvolving[spec.id] = conjured;
+
+    ZZ.cache[hashed] = conjured;
+
     return conjured;      
   };
 
@@ -218,20 +240,28 @@ ZZ.Concept = function(spec) { //spec needs an id
   self.textResponsesToConcept = function(other) {
     var involved = self.zamsInvolved();
     ///console.log('involved',involved);
-
     var relevantZams = self.zamsInvolved().select(function(zam) { 
       ////console.log('zam',zam);
       return zam.receiver == self.id && zam.message == other.id; 
-    
     });
-    /////console.log('relevantZams',relevantZams);      
+    //////console.log('relevantZams',relevantZams);      
+    
     var result = relevantZams.map(function(z) { return z.response; });
     return result;
   };
-  
-  
-  
-  
+
+
+  self.addResponse = function(message,response,callback) {
+    console.log('Concept.addResponse ****/m/r:',message,response);
+    if (typeof message != "object") { return "message must be object"};
+    if (typeof response == "object") {
+      newZim({ receiver: self.id, message: message.id, response: response.id },callback);
+    }
+    else {
+      newZam({ receiver: self.id, message: message.id, response: response },callback);      
+    }
+  };
+
   
   self.receive = function(messageConcept) {
     var result = {
@@ -565,6 +595,9 @@ ZZ.Widgets.ConceptSearch = function(spec) {
           dupe[zam.receiver] = 'ok';
         }
       });
+      
+      console.log('filtered',filtered);
+      
   
       var conjured = filtered.map(function(spec) { return ZZ.Zam(spec).receiverConcept(); });
       backplane.publish('search-results',conjured);
@@ -887,7 +920,6 @@ ZZ.Widgets.Trainer = function(spec) {
       success: function(r) {
         var o = eval('(' + r + ')');
         var zam = ZZ.Zam(o);
-        ZZ.cache.addZam(zam);        
         callback(zam);
       }
     });
@@ -996,7 +1028,7 @@ ZZ.Widgets.Trainer = function(spec) {
       success: function(r) {
         var o = eval('(' + r + ')');        
         var zim = ZZ.Zim(o);
-        ZZ.cache.addZim(zim);        
+        ////ZZ.cache.addZim(zim);        
         callback(zim);      
       }
     });
@@ -1026,15 +1058,16 @@ ZZ.Widgets.Trainer = function(spec) {
     if (typeof o.message != "undefined") { thisData.message = o.message; }
     if (typeof o.response != "undefined") { thisData.response = o.response; }
 
-
-    var hashed = 'zIms-where-' + JSON.stringify(o);    
-    if (typeof ZZ.cache[hashed] != "undefined") {
-      console.log('FOUUUUND THE STRINGY IN THE ZIM CASHY');
-      return ZZ.cache[hashed];
-    }
+    var hashed = 'zIms-where-' + JSON.stringify(o); 
     
-
-
+    console.log('getZimsWhere',hashed);
+    
+       
+    if (typeof ZZ.cache[hashed] != "undefined") {
+      console.log('FOUUUUND THE STRINGY IN THE ZIM CASHY',ZZ.cache[hashed]);
+      var copy = ZZ.cache[hashed].collect(function(z) { return z; });
+      return copy; //IMPORTANT NOT TO YIELD WHAT'S IN THE CACHE... you could shift() it by mistake!!
+    }
 
     var r = jQuery.ajax({
       type: 'POST',
@@ -1042,16 +1075,18 @@ ZZ.Widgets.Trainer = function(spec) {
       data: thisData,
       async: false
     }).responseText;
-    var zims = eval('(' + r + ')');
-    var conjured = zims.map(function(spec) { return ZZ.Zim(spec); });
-    conjured.each(function(zim) {
-      ////ZZ.cache.zim_id[zim.zim_id] = zim;
-      ZZ.cache.addZim(zim);      
-    });
-
+    
+    
+    ////console.log('ARRRR R R R',r);
+    var evaluated = eval('(' + r + ')');   
+    //console.log('evaluated',evaluated); 
+    var conjured = evaluated.collect(function(o) { return ZZ.Zim(o); });
+    //console.log('conjured',conjured); 
+    ZZ.conjured = conjured;
+    //console.log('STORing:::::::hashed',hashed,'conjured',conjured);
     ZZ.cache[hashed] = conjured;
-
-    return conjured;      
+    //console.log('VERIFY STOR:',ZZ.cache[hashed]);
+    return conjured;    
   }
 
   function getZamsWhere(o) {
@@ -1065,7 +1100,9 @@ ZZ.Widgets.Trainer = function(spec) {
     var hashed = 'zAms-where-' + JSON.stringify(o);    
     if (typeof ZZ.cache[hashed] != "undefined") {
       console.log('FOUUUUND THE STRINGY IN THE ZAM CASHY');
-      return ZZ.cache[hashed];
+      //////return ZZ.cache[hashed];
+      var copy = ZZ.cache[hashed].collect(function(z) { return z; });
+      return copy; //IMPORTANT NOT TO YIELD WHAT'S IN THE CACHE... you could shift() it by mistake!!
     }
     
     
@@ -1081,7 +1118,6 @@ ZZ.Widgets.Trainer = function(spec) {
     var conjured = zams.map(function(spec) { return ZZ.Zam(spec); });
     conjured.each(function(zam) {
       ///ZZ.cache.zam_id[zam.zam_id] = zam;
-      ZZ.cache.addZam(zam);      
     });
     
     
@@ -1096,7 +1132,6 @@ ZZ.Widgets.Trainer = function(spec) {
       response: resp
     });
     
-    them.each(function(z) { ZZ.cache.addZam(z); });
         
     return them.map(function(z) { return z.receiver; });
   }
@@ -1140,12 +1175,59 @@ ZZ.Poller = function(spec) {
   var self = {};
   var pov = spec.pov;
 
-  self.searchZams = function(str) {
+  self.searchZamsViaGZR = function(str) {
     //get all (ids of) receivers  whom, when sent the message <pov.id>, respond with <str>
-    var them = getZamReceivers(pov.id,str);
-    
+    var them = getZamReceivers(pov.id,str);   
     return them; 
   };
+  self.search = function(str) {
+    //get all (ids of) receivers  whom, when sent the message <pov.id>, respond with <str>
+    var them = getZamsWhere({
+      message: pov.id,
+      response: str
+    });
+    ///console.log('Poller.search: them',them);
+    var result = them.map(function(z){  return z.receiverConcept(); });
+    return result;    
+  };
+  
+  self.searchMR = function(msg,resp) {
+    var msgID = getFirstZamReceiver(pov.id,msg);
+    var respID = getFirstZamReceiver(pov.id,resp);
+
+
+    var zams = getZamsWhere({
+      message: msgID,
+      response: resp
+    });
+
+    var zims = getZimsWhere({
+      message: msgID,
+      response: respID
+    });
+    
+    var result = [];
+    var zimConcepts = zims.map(function(z){  return z.receiverConcept(); });
+    var zamConcepts = zams.map(function(z){  return z.receiverConcept(); }); 
+    result = result.concat(zimConcepts);
+    result = result.concat(zamConcepts);
+    return result;
+  };
+  
+  self.hookupConcept = function(concept,messageText,response,callback) {
+    var msgID = getFirstZamReceiver(pov.id,messageText);
+    var respID = getFirstZamReceiver(pov.id,response);
+    msgID = parseInt(msgID,10);
+    ///console.log('msgID',msgID,typeof msgID);
+    var cb = callback || function(){};
+    if (respID) {
+      concept.addResponse(ZZ.Concept({ id: msgID }),ZZ.Concept({ id: respID }),cb);
+    }
+    else {
+      concept.addResponse(ZZ.Concept({ id: msgID }),response,cb);
+    }
+  };
+  
   return self;
 };
 

@@ -3,6 +3,8 @@ ZimZam
 
 language-independent knowledge base for concepts and relationships
 
+## Demo site: [This link](http://zimzam.dev.bratliensoftware.com/)
+
 ![screenshot](http://github.com/chrisbratlien/zim-zam/raw/master/screenshot.png)
 
 

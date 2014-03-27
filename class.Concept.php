@@ -61,7 +61,7 @@ class Concept {
     $set = get_zims_where(Array(
       sprintf('(receiver = %d)',$this->id),
       sprintf('(message = %d)',$other->id)
-    ));
+    ),'AND');
     ///pp($set,'set');
     
     /****
@@ -99,7 +99,7 @@ class Concept {
     $set = get_zams_where(Array(
       sprintf('(receiver = %d)',$this->id),
       sprintf('(message = %d)',$other->id)
-    ));
+    ),'AND');
     //pp($set,'set');
     //return 'blah';
     

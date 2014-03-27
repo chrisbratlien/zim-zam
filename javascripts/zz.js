@@ -211,7 +211,7 @@ ZZ.Concept = function(spec) { //spec needs an id
   self.zamsInvolved = function() {
     var hashed = 'zAms-Involved-' + self.hash();   
     if (typeof ZZ.cache[hashed] != "undefined") {
-      console.log('FOUUUUND THE STRINGY IN THE ZAMS-INVOLVED CASHY');
+      /////console.log('FOUUUUND THE STRINGY IN THE ZAMS-INVOLVED CASHY');
       return ZZ.cache[hashed];
     }
 
@@ -596,7 +596,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
         }
       });
       
-      console.log('filtered',filtered);
+      //////console.log('filtered',filtered);
       
   
       var conjured = filtered.map(function(spec) { return ZZ.Zam(spec).receiverConcept(); });
@@ -676,7 +676,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
       if (c == ZZ.keycodes.RETURN) {
         self.publish('enter/return pressed',self);
       }
-      if (c == ZZ.keycodes.TAB) { 
+      if (c == ZZ.keycodes.TAB || c == ZZ.keycodes.RETURN) { 
         if (results.length == 1) {
           return false; //we're already at the result we want. keydown would have already handled this stoner.beg
         }
@@ -689,7 +689,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
       var c = e.keyCode || e.which;
       
       ////console.log('c',c);
-      if (c == ZZ.keycodes.TAB) {
+      if (c == ZZ.keycodes.TAB || c == ZZ.keycodes.RETURN) {
         ///console.log('TAB');
         
         
@@ -793,7 +793,7 @@ ZZ.Widgets.Trainer = function(spec) {
 
 
   self.refresh = function() {
-    ////console.log('refresh called asdf');
+    console.log('refresh called asdf');
   
     header.empty();
     var translations = inputs.receiver.textResponsesToConcept(ZZ.langConcept);
@@ -1064,7 +1064,7 @@ ZZ.Widgets.Trainer = function(spec) {
     
        
     if (typeof ZZ.cache[hashed] != "undefined") {
-      console.log('FOUUUUND THE STRINGY IN THE ZIM CASHY',ZZ.cache[hashed]);
+      ////console.log('FOUUUUND THE STRINGY IN THE ZIM CASHY',ZZ.cache[hashed]);
       var copy = ZZ.cache[hashed].collect(function(z) { return z; });
       return copy; //IMPORTANT NOT TO YIELD WHAT'S IN THE CACHE... you could shift() it by mistake!!
     }
@@ -1099,7 +1099,7 @@ ZZ.Widgets.Trainer = function(spec) {
     
     var hashed = 'zAms-where-' + JSON.stringify(o);    
     if (typeof ZZ.cache[hashed] != "undefined") {
-      console.log('FOUUUUND THE STRINGY IN THE ZAM CASHY');
+      /////console.log('FOUUUUND THE STRINGY IN THE ZAM CASHY');
       //////return ZZ.cache[hashed];
       var copy = ZZ.cache[hashed].collect(function(z) { return z; });
       return copy; //IMPORTANT NOT TO YIELD WHAT'S IN THE CACHE... you could shift() it by mistake!!
@@ -1402,6 +1402,7 @@ ZZ.Widgets.Gallery = function(spec) {
 
 
   self.refreshThumb = function(concept) {
+    console.log('refreshThumb',concept);
     thumbsDiv.empty();        
     var glyphURLs = concept.glyphURLs();
     var thumbsClass = 'thumb-' + glyphURLs.length;
@@ -1548,9 +1549,18 @@ ZZ.Widgets.Gallery = function(spec) {
 }
 
 
+ZZ.Widgets.ImageGallery = function(spec){
+  var self = {};
+  self.renderOn = function(wrap) {
+    var button = DOM.button('View Gallery').addClass('btn btn-primary');
 
+    spec.images.each(function(image){
+    
+    
+    });
 
-
-
-
-
+  
+  
+  }
+  return self;
+}

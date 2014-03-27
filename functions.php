@@ -136,10 +136,12 @@ function translate_zim_response($zim,$language) {
   return text_translations_of_concept($zim->response,$language);
 }
 
-function get_zims_where($wheres = Array()) {
+function get_zims_where($wheres = Array(),$conjunction) {
+  if (empty($conjunction)) { die('empty conjunction'); }
+
   $sql = sprintf('SELECT * FROM zim WHERE 1');
   foreach($wheres as $w) {
-    $sql .= sprintf(' AND %s',$w);
+    $sql .= sprintf(' %s %s',$conjunction,$w);
   }  
   /**
   pp($wheres,'wheres');
@@ -184,10 +186,11 @@ function get_all_zims() {
 
 /* ZAM */
 
-function get_zams_where($wheres = Array()) {
+function get_zams_where($wheres = Array(),$conjunction) {
+  if (empty($conjunction)) { die('empty conjunction'); }
   $sql = sprintf('SELECT * FROM zam WHERE 1');
   foreach($wheres as $w) {
-    $sql .= sprintf(' AND %s',$w);
+    $sql .= sprintf(' %s %s',$conjunction,$w);
   }  
   
   ///print_r($sql);
@@ -225,7 +228,7 @@ function askzim($a,$b,$c) {
     constraint('message',$b),
     constraint('response',$c)
   );
-  $them = get_zims_where($wheres);
+  $them = get_zims_where($wheres,'AND');
   return $them;  
 }
 function askzam($a,$b,$c) {
@@ -235,7 +238,7 @@ function askzam($a,$b,$c) {
     constraint('message',$b),
     constraint('response',$c)
   );
-  $them = get_zams_where($wheres);
+  $them = get_zams_where($wheres,'AND');
   return $them;  
 }
 function askzimzam($a,$b,$c) {
@@ -440,7 +443,7 @@ function new_zam($opts) {
   $q = mysql_query($sql);
   $zam_id = mysql_insert_id();
 
-  $them = get_zams_where(array(sprintf('zam_id = %d',$zam_id)));
+  $them = get_zams_where(array(sprintf('zam_id = %d',$zam_id)),'AND');
   return array_shift($them);
 }
 
@@ -461,7 +464,7 @@ function new_zim($opts) {
   $zim_id = mysql_insert_id();
   
   
-  $them = get_zims_where(array(sprintf('zim_id = %d',$zim_id)));
+  $them = get_zims_where(array(sprintf('zim_id = %d',$zim_id)),'AND');
   
   ///return $zim_id;
   return array_shift($them);
@@ -620,7 +623,7 @@ add_action('ws_get_zims_where',function($opts) {
     array_push($wheres,sprintf('response = %d',$opts['response']));
   }
 
-  $result = get_zims_where($wheres);
+  $result = get_zims_where($wheres,'AND');
   
   $specs = array_map(function ($e) { return $e->spec; },$result);
   echo json_encode($specs);
@@ -639,7 +642,7 @@ add_action('ws_get_zams_where',function($opts) {
     array_push($wheres,sprintf('response = "%s"',mysql_escape_string($opts['response'])));
   }
 
-  $result = get_zams_where($wheres);
+  $result = get_zams_where($wheres,'AND');
   $specs = array_map(function ($e) { return $e->spec; },$result);
   echo json_encode($specs);
   exit;  
@@ -652,7 +655,7 @@ function foo_zam_search($str) {
   $lang = 1;
   array_push($wheres,sprintf('response LIKE "%s"','%' . mysql_escape_string($str) . '%'));
   ///NOTE: why limit this?!? ///array_push($wheres,sprintf('message = %d',$lang));
-  $result = get_zams_where($wheres);
+  $result = get_zams_where($wheres,'AND');
   $specs = array_map(function ($e) { return $e->spec; },$result);
   return $specs; 
 }

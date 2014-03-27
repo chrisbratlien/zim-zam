@@ -175,18 +175,12 @@ $lang = current_language();
     
       newZam({ receiver: gallery.currentConcept.id, message: ZZ.cache.glyphURLConcept.id, response: url },function(id) {
         gallery.refresh();
-        /*
         setTimeout(function() {
           window.location.reload(); 
-          
         },1000);
-        */        
         
       });
     });
-
-
-
 
 
   });

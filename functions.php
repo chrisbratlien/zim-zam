@@ -1,6 +1,7 @@
 <?php
 
 date_default_timezone_set('America/Chicago');
+define('WILD',-1);
 
 ini_set('display_errors',1);
 
@@ -10,6 +11,10 @@ require_once 'class.Concept.php';
 require_once 'class.Zim.php';
 require_once 'class.Zam.php';
 require_once 'class.phpmailer.php';
+
+
+
+
 
 if (!function_exists('pp')) { //Pretty Print
   function pp($obj,$label = '') {  
@@ -141,8 +146,6 @@ function get_zims_where($wheres = Array()) {
   pp($sql,'sql');
   exit;
   **/
-  
-  
 	$mysql_result = mysql_query($sql);	
   $result = array();
 	while ($row = mysql_fetch_object($mysql_result)) {
@@ -150,40 +153,21 @@ function get_zims_where($wheres = Array()) {
 	}  
   return $result;
 }
-
-
-
 function get_zims_with_response($id) {
-  $sql = sprintf('SELECT * FROM zim WHERE response = %d',$id);
-	$mysql_result = mysql_query($sql);	
-  $result = array();
-	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row);
-	}  
-  return $result;
+  return askzim(WILD,WILD,$id);
 }
-
 function get_zims_with_message($id) {
-  $sql = sprintf('SELECT * FROM zim WHERE message = %d',$id);
-	$mysql_result = mysql_query($sql);	
-  $result = array();
-	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row);
-	}  
-  return $result;
+  return askzim(WILD,$id,WILD);
 }
-
 function get_zims_with_receiver($id) {
-  $sql = sprintf('SELECT * FROM zim WHERE receiver = %d',$id);
-	$mysql_result = mysql_query($sql);	
-  $result = array();
-	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,$row);
-	}  
-  return $result;
+  return askzim($id,WILD,WILD);
 }
-
 function get_zims_involving($id) {
+  /**
+    $a = askzim($id,WILD,WILD);
+    $b = askzim(WILD,$id,WILD);
+    $c = askzim(WILD,WILD,$id);
+  ***/
   $sql = sprintf('SELECT * FROM zim WHERE (receiver = %d) OR (message = %d) OR (response = %d)',$id,$id,$id);
 	$mysql_result = mysql_query($sql);	
   $result = array();
@@ -194,13 +178,7 @@ function get_zims_involving($id) {
 }
 
 function get_all_zims() {
-  $sql = sprintf('SELECT * FROM zim');
-	$mysql_result = mysql_query($sql);	
-  $result = array();
-	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,new Zim($row));
-	}  
-  return $result;
+  return askzim(WILD,WILD,WILD);
 }
 
 
@@ -225,53 +203,70 @@ function get_zams_where($wheres = Array()) {
 }
 
 
+
+function constraint($fname,$fval) {
+  $type = gettype($fval);
+  /////pp($type,'gettype fval');
+  if ($fval == WILD) {
+    return 'TRUE'; //dont add any sql constraint
+  }
+  if ($type == 'integer') {
+    return sprintf('`%s` = %d',$fname,$fval);
+  }
+  if ($type == 'string') {
+    return sprintf('`%s` = "%s"',$fname,mysql_real_escape_string($fval));
+  }
+  return 'constraint doesnt know what to do.  ';
+}
+function askzim($a,$b,$c) {
+  $wheres = Array();
+  array_push($wheres,
+    constraint('receiver',$a),
+    constraint('message',$b),
+    constraint('response',$c)
+  );
+  $them = get_zims_where($wheres);
+  return $them;  
+}
+function askzam($a,$b,$c) {
+  $wheres = Array();
+  array_push($wheres,
+    constraint('receiver',$a),
+    constraint('message',$b),
+    constraint('response',$c)
+  );
+  $them = get_zams_where($wheres);
+  return $them;  
+}
+function askzimzam($a,$b,$c) {
+  return (object) Array(
+    'zims' => askzim($a,$b,$c),
+    'zams' => askzam($a,$b,$c)    
+  );
+}
+
 function get_all_zams() {
-  $sql = sprintf('SELECT * FROM zam');
-	$mysql_result = mysql_query($sql);	
-  $result = array();
-	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,new Zam($row));
-	}  
-  return $result;
+  return askzam(WILD,WILD,WILD);
 }
-
 function get_zams_with_message($id) {
-  $sql = sprintf('SELECT * FROM zam WHERE message = %d',$id);
-	$mysql_result = mysql_query($sql);	
-  $result = array();
-	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,new Zam($row));
-	}  
-  return $result;
+  return askzam(WILD,$id,WILD);
 }
-
-
 function get_zams_with_response($str) {
-  $sql = sprintf('SELECT * FROM zam WHERE response = "%s"',mysql_escape_string($str));
-	$mysql_result = mysql_query($sql);	
-  $result = array();
-	while ($row = mysql_fetch_object($mysql_result)) {
-		array_push($result,new Zam($row));
-	}  
-  return $result;
+  return askzam(WILD,WILD,$str);
 }
 
 function get_zams_with_message_and_response($msg,$response) {
-  $zams = get_zams_where(Array(
-    sprintf('response = "%s"',mysql_escape_string($response)),
-    sprintf('message = %d',$msg)));
-  return $zams;
+ return askzam(WILD,$msg,$response); 
 }
 
 function get_zams_with_receiver_and_message($recv,$msg) {
-  $zams = get_zams_where(Array(
-    sprintf('receiver = %d',$recv),
-    sprintf('message = %d',$msg)));
-  return $zams;
+ return askzam($recv,$msg,WILD);
 }
 
 function get_zam_receivers($msg,$response) {
-  $receivers = array_map(function($zam) { return $zam->spec->receiver; },get_zams_with_message_and_response($msg,$response));
+  $receivers = array_map(function($zam) { 
+    return $zam->spec->receiver; 
+  },askzam(WILD,$msg,$response));
   return $receivers;
 }
 
@@ -280,7 +275,9 @@ function get_first_zam_receiver($msg,$response) {
 }
 
 function get_zam_responses($recv,$msg) {
-  $responses = array_map(function($zam) { return $zam->spec->response; },get_zams_with_receiver_and_message($recv,$msg));
+  $responses = array_map(function($zam) { 
+    return $zam->spec->response; 
+  },askzam($recv,$msg,WILD));
   return $responses;
 }
 
@@ -314,17 +311,6 @@ function batch_get_zams_involving($comma_separated_ids) {
   return $result;
 }
 
-
-
-
-
-
-
-
-
-
-
-
 function concept_url($id) {
   return sprintf('%s/concept/%d',get_bloginfo('url'),$id);
 }
@@ -336,10 +322,6 @@ function linkify_concept($id,$lang) {
   }
   return sprintf('<a href="%s">%s</a>',concept_url($id),array_shift($trans));
 }
-
-
-
-
 
 function linkify_zim($zim,$lang) {
   return sprintf('%s <- %s => %s',

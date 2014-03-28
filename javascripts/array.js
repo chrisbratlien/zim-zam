@@ -21,6 +21,10 @@ Array.prototype.select = function(test) {
   
   return result;
 };
+Array.prototype.reject = function(test) {
+  return this.select(function(element) { return !test(element); });
+
+}
 
 //detect returns the first element which passes the test, or false. aka "find"
 Array.prototype.detect = function(test) {

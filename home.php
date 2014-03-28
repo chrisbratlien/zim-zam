@@ -64,6 +64,7 @@ $lang = current_language();
 
   ZZ.lang = <?php echo $lang; ?>;
   ZZ.langConcept = ZZ.Concept({ id: ZZ.lang });
+  ZZ.langText = ZZ.langConcept.textResponsesToConcept(ZZ.langConcept).shift();
   //ZZ.conceptID = < ?p hp /////echo $concept_id; ?>;
   //ZZ.thisConcept = ZZ.Concept({ id: < ?php  echo $concept_id;?> });
 
@@ -119,7 +120,7 @@ $lang = current_language();
     ///console.log('gal',gallery);
     var newForm = ZZ.Widgets.NewConceptForm({
       lang: ZZ.lang,
-      langText: '<?php echo array_shift(text_translations_of_concept($lang,$lang)); ?>',
+      langText: ZZ.langText,
       callback: function(concept) {
         ZZ.conceptID = concept.id;
         ZZ.thisConcept = concept;
@@ -138,9 +139,7 @@ $lang = current_language();
 
     /* UPLOADER */
     var uploaderWrap = jQuery('#uploader-wrap');
-    var uploader = ZZ.Widgets.Uploader({
-      gossip: campfire
-    });
+    var uploader = ZZ.Widgets.Uploader({});
     
     
     campfire.subscribe('reveal-gallery-and-trainer',function(o){
@@ -168,16 +167,13 @@ $lang = current_language();
     /* wiring of event handlers */    
     
     
-    campfire.subscribe('new-upload-url',function(url) {
+    uploader.subscribe('new-upload-url',function(url) {
     
       console.log('gallery',gallery);//gallery.currentConcept
     
     
       newZam({ receiver: gallery.currentConcept.id, message: ZZ.cache.glyphURLConcept.id, response: url },function(id) {
         gallery.refresh();
-        setTimeout(function() {
-          window.location.reload(); 
-        },1000);
         
       });
     });

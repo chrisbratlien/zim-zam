@@ -87,6 +87,7 @@ add_action('wp_footer',function() use($lang,$concept_id) {
 <script type="text/javascript">
   ZZ.lang = <?php echo $lang; ?>;
   ZZ.langConcept = ZZ.Concept({ id: ZZ.lang });
+  ZZ.langText = ZZ.langConcept.textResponsesToConcept(ZZ.langConcept).shift();
   
   
   ZZ.conceptID = <?php echo $concept_id; ?>;
@@ -94,21 +95,12 @@ add_action('wp_footer',function() use($lang,$concept_id) {
 
   jQuery(document).ready(function() {
 
-
-
-
-
     var campfire = BSD.PubSub({});
-    
-    
-
 
     jQuery('#submit').click(function() {
-    
       var message = jQuery('#message-select').val();
       var responseText = jQuery('#response-text').val();
       var responseID = jQuery('#response-id').val();
-    
     
       if (responseText.length > 0) {
         //newConceptAndZam({ message: 1, response: 'All of Me' },function(r) { console.log(r); })
@@ -149,7 +141,7 @@ add_action('wp_footer',function() use($lang,$concept_id) {
 
     var newForm = ZZ.Widgets.NewConceptForm({
       lang: <?php echo $lang; ?>,
-      langText: '<?php echo array_shift(text_translations_of_concept($lang,$lang)); ?>',
+      langText: ZZ.langText,
       callback: function(concept) {
         ///console.log('concept',concept);
         window.location.href = concept.linkify();
@@ -162,13 +154,11 @@ add_action('wp_footer',function() use($lang,$concept_id) {
     var involvedList = ZZ.Widgets.Involved({ concept: ZZ.thisConcept });
     involvedList.renderOn(myWrap);
 
-    var uploader = ZZ.Widgets.Uploader({
-      gossip: campfire
-    });
+    var uploader = ZZ.Widgets.Uploader({});
     var uploaderWrap = jQuery('#uploader-wrap');
     uploader.renderOn(uploaderWrap);
     
-    campfire.subscribe('new-upload-url',function(url) {
+    uploader.subscribe('new-upload-url',function(url) {
       newZam({ receiver: ZZ.conceptID, message: ZZ.cache.glyphURLConcept.id, response: url },function(id) {
         setTimeout(function() {
           window.location.reload(); 

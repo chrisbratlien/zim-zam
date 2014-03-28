@@ -61,6 +61,11 @@ if (!function_exists('pp')) { //Pretty Print
   }
 }
 
+function pr($obj,$label = '') {
+  echo sprintf('%s: %s',$label,print_r($obj,true));
+}
+
+
 function echo_if($cond,$str) {
   if ($cond) {
     echo $str;
@@ -274,7 +279,8 @@ function get_zam_receivers($msg,$response) {
 }
 
 function get_first_zam_receiver($msg,$response) {
-  return array_shift(get_zam_receivers($msg,$response));
+  $them = get_zam_receivers($msg,$response);
+  return array_shift($them);
 }
 
 function get_zam_responses($recv,$msg) {
@@ -438,7 +444,7 @@ function new_zam($opts) {
   $sql = sprintf("INSERT INTO `zam` (receiver,message,response) VALUES (%d,%d,'%s')",
     $zam_receiver,
     $zam_message,
-    mysql_escape_string($zam_response)
+    mysql_real_escape_string($zam_response)
   );
   $q = mysql_query($sql);
   $zam_id = mysql_insert_id();
@@ -482,7 +488,7 @@ function update_zam_response($opts) {
   $zam_id = $opts['zam_id'];
   $response = $opts['response'];
   $sql = sprintf('UPDATE `zam` SET response = "%s" WHERE zam_id = %d',
-    mysql_escape_string($response),
+    mysql_real_escape_string($response),
     $zam_id);
     
   //print_r($sql);
@@ -558,6 +564,30 @@ add_action('ws_delete_zim',function($opts){
   echo json_encode($result);
   exit;
 });
+
+
+
+
+
+add_action('ws_askzim',function($opts){
+  $result = askzim($opts['a'],$opts['b'],$opts['c']);
+  $specs = array_map(function ($e) { return $e->spec; },$result);
+  echo json_encode($specs);
+  exit;
+});
+
+add_action('ws_askzam',function($opts){
+  $result = askzam($opts['a'],$opts['b'],$opts['c']);
+  $specs = array_map(function ($e) { return $e->spec; },$result);
+  echo json_encode($specs);
+  exit;
+});
+
+
+
+
+
+
 
 
 
@@ -639,7 +669,7 @@ add_action('ws_get_zams_where',function($opts) {
     array_push($wheres,sprintf('message = %d',$opts['message']));
   }
   if (array_key_exists('response',$opts)) {
-    array_push($wheres,sprintf('response = "%s"',mysql_escape_string($opts['response'])));
+    array_push($wheres,sprintf('response = "%s"',mysql_real_escape_string($opts['response'])));
   }
 
   $result = get_zams_where($wheres,'AND');
@@ -653,7 +683,7 @@ add_action('ws_get_zams_where',function($opts) {
 function foo_zam_search($str) {
   $wheres = Array();
   $lang = 1;
-  array_push($wheres,sprintf('response LIKE "%s"','%' . mysql_escape_string($str) . '%'));
+  array_push($wheres,sprintf('response LIKE "%s"','%' . mysql_real_escape_string($str) . '%'));
   ///NOTE: why limit this?!? ///array_push($wheres,sprintf('message = %d',$lang));
   $result = get_zams_where($wheres,'AND');
   $specs = array_map(function ($e) { return $e->spec; },$result);
@@ -763,8 +793,8 @@ add_action('ws_new_coupon',function($opts){
   $sql = sprintf("INSERT INTO  `coupons` (`vendor_id`,`item`,`details`) " .
     " VALUES (%s, '%s', '%s')",
     $vendor_id,
-    mysql_escape_string($opts['item']),
-    mysql_escape_string($opts['details'])
+    mysql_real_escape_string($opts['item']),
+    mysql_real_escape_string($opts['details'])
   );
 
   $q = mysql_query($sql);
@@ -787,8 +817,8 @@ add_action('ws_new_vendor',function($opts) {
   /////print_r($opts);
 
   $sql = sprintf("INSERT INTO vendors (vendor_name,logo) VALUES ('%s','%s')",
-    mysql_escape_string($opts['vendor_name']),
-    mysql_escape_string($opts['logo'])
+    mysql_real_escape_string($opts['vendor_name']),
+    mysql_real_escape_string($opts['logo'])
   );
   
   /////echo $sql;

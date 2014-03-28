@@ -8,6 +8,9 @@ ZZ.Concept = false; //slot
 ZZ.defaultGlyphURL = 'http://zimzam.dev.bratliensoftware.com/images/zimzam-white.png';
 
 
+ZZ.WILD = -1; //wildcard id
+var WILD = ZZ.WILD;
+
 ZZ.keycodes = {
     TAB: 9,
     "RETURN": 13,
@@ -23,13 +26,14 @@ ZZ.keycodes = {
 
 ZZ.Zim = function(spec) {
 
-  console.log('constructing myself from spec',spec);
+  ////console.log('constructing myself from spec',spec);
 
   /////var self = spec;
   //////self.spec = spec;
   var self = {};
 
 
+  self.type = 'zim';
   self.zim_id = spec.zim_id;
   self.receiver = spec.receiver;
   self.message = spec.message;
@@ -38,7 +42,16 @@ ZZ.Zim = function(spec) {
 
   self.hash = function() {
     return 'zim_id:' + spec.zim_id;
-  }
+  };
+  
+  self.receiverHash = function() {
+    return 'receiver:' + spec.receiver; 
+  };
+
+  self.receiverMessageHash = function() {
+    return 'receiver:' + spec.receiver + ':message:' + spec.message;
+  };
+  
 
   self.receiverConcept = function() {
     return ZZ.Concept({ id: spec.receiver });
@@ -50,7 +63,7 @@ ZZ.Zim = function(spec) {
     return ZZ.Concept({ id: spec.response });
   };
   
-  console.log('returning',self);
+  ////console.log('returning',self);
   
   return self;
 };
@@ -62,10 +75,19 @@ ZZ.Zam = function(spec) {
   var self = spec;
   self.spec = spec;
 
+  self.type = 'zam';
 
   self.hash = function() {
     return 'zam_id:' + spec.zam_id;
-  }
+  };
+
+  self.receiverHash = function() {
+    return 'receiver:' + spec.receiver; 
+  };
+  
+  self.receiverMessageHash = function() {
+    return 'receiver:' + spec.receiver + ':message:' + spec.message;
+  };
 
   self.receiverConcept = function() {
     return ZZ.Concept({ id: spec.receiver });
@@ -90,42 +112,33 @@ ZZ.Zam = function(spec) {
 
 ZZ.cache = {};
 
-ZZ.cache.zimsInvolving = {};
-ZZ.cache.zamsInvolving = {};
 
 
 
-/**
+ZZ.updateCacheArray = function(key,hashable) {
+  if (typeof hashable.hash == "undefined") {
+    return "not hashable " + JSON.stringify(hashable);
+  }  
+  var hit = ZZ.cache[key]; //should hit an array
+  if (typeof hit == "undefined") {
+    ZZ.cache[key] = []; //initialize
+    ZZ.cache[key].push(hashable);
+    return ZZ.cache[key];
+  }  
+  var filtered = hit.reject(function(o){
+    return o.hash() == hashable.hash(); // leave out the one we're trying to update
+  });  
+  filtered.push(hashable); //do the update!! 
+  ZZ.cache[key] = filtered;
+  return ZZ.cache[key];
+};
 
-ZZ.cache.addZim = function(zim) {
 
-  var zimHash = zim.hash();
-
-  if (typeof ZZ.cache.zimsInvolving[zim.spec.receiver] == "undefined") {
-    ZZ.cache.zimsInvolving[zim.spec.receiver] = [];
-  }
-  if (typeof ZZ.cache.zimsInvolving[zim.spec.message] == "undefined") {
-    ZZ.cache.zimsInvolving[zim.spec.message] = [];
-  }
-  if (typeof ZZ.cache.zimsInvolving[zim.spec.response] == "undefined") {
-    ZZ.cache.zimsInvolving[zim.spec.response] = [];
-  }
-
-  var already = false;
-  
-  already = ZZ.cache.zimsInvolving[zim.spec.receiver].detect(function(zim) { return zim.hash() == zimHash; });
-  if (!already) { ZZ.cache.zimsInvolving[zim.spec.receiver].push(zim); }  
-
-  already = ZZ.cache.zimsInvolving[zim.spec.message].detect(function(zim) { return zim.hash() == zimHash; });
-  if (!already) { ZZ.cache.zimsInvolving[zim.spec.message].push(zim); }  
-
-  already = ZZ.cache.zimsInvolving[zim.spec.response].detect(function(zim) { return zim.hash() == zimHash; });
-  if (!already) { ZZ.cache.zimsInvolving[zim.spec.response].push(zim); }  
-
-}
-***/
 
 ZZ.cache.removeZim = function(z) {
+  console.log('removeZim!!',z,'NEED TO REIMPLEMENT?!?');
+
+/****
   function helper(conceptID) {
     if (typeof ZZ.cache.zimsInvolving[conceptID] == "undefined") {
       ZZ.cache.zimsInvolving[conceptID] = [];
@@ -137,6 +150,7 @@ ZZ.cache.removeZim = function(z) {
   
   helper(z.spec.receiver);
   helper(z.spec.message);
+  *******/
 }
 
 
@@ -190,11 +204,47 @@ ZZ.Concept = function(spec) { //spec needs an id
     return 'concept:' + spec.id;
   };
 
+
   self.zimsInvolved = function() {
-    var hits = ZZ.cache.zimsInvolving[spec.id];
-    if (typeof hits != "undefined" && hits.length > 0) {
-      return hits;
+    console.log('ZIMS INVOLVED CALLED');
+    var iReceive = askZim(spec.id,WILD,WILD);
+    var iMessage = askZim(WILD,spec.id,WILD); 
+    var iRespond = askZim(WILD,WILD,spec.id);
+    var result = [];
+    result = result.concat(iReceive);
+    result = result.concat(iMessage);
+    result = result.concat(iRespond);
+    return result;
+  };
+
+
+  self.zamsInvolved = function() {
+    console.log('ZAMS INVOLVED CALLED');
+    
+    var hash = self.hash(); //the hash of this concept!!
+    if (typeof ZZ.cache[hash] != "undefined") {
+      return ZZ.cache[hash];
     }
+
+    var iReceive = askZam(spec.id,WILD,WILD);
+    var iMessage = askZam(WILD,spec.id,WILD); 
+    //no need to ask on a zam.....var iRespond = askZam(WILD,WILD,spec.id);
+
+    var result = [];
+    result = result.concat(iReceive);
+    result = result.concat(iMessage);
+    result.each(function(z){ ZZ.updateCacheArray(hash,z); });
+    return result;
+  };
+
+  self.wasZimsInvolved = function() {
+
+
+    var hashed = 'zimsInvolved-' + self.hash();   
+    if (typeof ZZ.cache[hashed] != "undefined") {
+      return ZZ.cache[hashed];
+    }
+    
     var r = jQuery.ajax({
       type: 'POST',
       url: ZZ.baseURL + '/ws',
@@ -204,12 +254,18 @@ ZZ.Concept = function(spec) { //spec needs an id
     var zims = eval('(' + r + ')');    
   
     var conjured = zims.map(function(spec) { return ZZ.Zim(spec); });
-    ZZ.cache.zimsInvolving[spec.id] = conjured;
+    ZZ.cache[hashed] = conjured;
     return conjured;      
   };
 
-  self.zamsInvolved = function() {
-    var hashed = 'zAms-Involved-' + self.hash();   
+
+
+
+
+
+
+  self.WASZamsInvolved = function() {
+    var hashed = 'zamsInvolved-' + self.hash();   
     if (typeof ZZ.cache[hashed] != "undefined") {
       /////console.log('FOUUUUND THE STRINGY IN THE ZAMS-INVOLVED CASHY');
       return ZZ.cache[hashed];
@@ -231,10 +287,22 @@ ZZ.Concept = function(spec) { //spec needs an id
   };
 
   self.conceptResponsesToConcept = function(other) {
+
+    ///////////console.log('spec.id',spec.id,'other.id',other.id,'wild',ZZ.WILD);
+    var relevantZims = askZim(spec.id,other.id,ZZ.WILD);
+    if (relevantZims.length > 0) {
+      console.log('RELEVANT LENGTH *****',relevantZims.length);
+    }    
+    ////////console.log('conceptResponsesToConcept relevantZims',relevantZims);
+    var result = relevantZims.map(function(z) { return ZZ.Concept({ id: z.response}); });
+    return result;
+    /*****
+    return "RARHGHGH";
     var relevantZims = self.zimsInvolved().select(function(zim) { return zim.receiver == self.id && zim.message == other.id; });
     //console.log('relevantZims',relevantZims);      
     var result = relevantZims.map(function(z) { return ZZ.Concept({ id: z.response}); });
     return result;
+    *****/
   };
 
   self.textResponsesToConcept = function(other) {
@@ -540,11 +608,8 @@ ZZ.Widgets.Procrastinator = function(spec) {
 
 
 ZZ.Widgets.ConceptSearch = function(spec) {
-  var self = {};
-  var backplane = BSD.PubSub({});
-  self.publish = backplane.publish;
-  self.subscribe = backplane.subscribe;
-
+  var self = BSD.PubSub({});
+  var backplane = self;
 
 
   var results = [];
@@ -572,7 +637,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
 
       var query = textBox.val();
       if (query.length == 0 ) { 
-        backplane.publish('search-results',[]); //empty    
+        self.publish('search-results',[]); //empty    
         return false; 
       }
       
@@ -600,7 +665,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
       
   
       var conjured = filtered.map(function(spec) { return ZZ.Zam(spec).receiverConcept(); });
-      backplane.publish('search-results',conjured);
+      self.publish('search-results',conjured);
     }  
   });
   
@@ -620,10 +685,10 @@ ZZ.Widgets.ConceptSearch = function(spec) {
      /////// console.log('concept',concept,'choice',choice);
       handle.click(function() {
         if (concept == choice) {
-          backplane.publish('search-results',concepts);
+          self.publish('search-results',concepts);
         }
         else {
-          backplane.publish('use-search-result',concept);
+          self.publish('use-search-result',concept);
         }
       });      
 
@@ -650,7 +715,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
     choice = false;
   };
 
-  backplane.subscribe('search-results',function(concepts) {
+  self.subscribe('search-results',function(concepts) {
     results = concepts;
     choice = false;
     ///console.log('payload',concepts);
@@ -659,7 +724,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
   });
   
   
-  backplane.subscribe('use-search-result',function(o) {
+  self.subscribe('use-search-result',function(o) {
     textBox.val(null);
     textBox.hide();
     choice = o;
@@ -700,7 +765,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
           self.publish('blur',self);
         
         
-          backplane.publish('use-search-result',results[0]);
+          self.publish('use-search-result',results[0]);
           return false;
         }
         return false;
@@ -713,7 +778,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
     wrap.append(resultsUL);    
     if (choice) { 
       ///console.log('weeee');
-      backplane.publish('use-search-result',choice);
+      self.publish('use-search-result',choice);
     }
   };
   
@@ -722,11 +787,8 @@ ZZ.Widgets.ConceptSearch = function(spec) {
 };
 
 ZZ.Widgets.Trainer = function(spec) {
-  var self = {};
-
-  var backplane = BSD.PubSub({});
-  self.publish = backplane.publish;
-  self.subscribe = backplane.subscribe;
+  var self = BSD.PubSub({});
+  var backplane = self;
 
   var inputs = {
     receiver: spec.concept,
@@ -776,12 +838,12 @@ ZZ.Widgets.Trainer = function(spec) {
 
     if (typeof inputs.response == "string") {
       newZam({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response },function(z) {
-        backplane.publish('onSave',z);
+        self.publish('onSave',z);
       });
     }
     else {
       newZim({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response.id },function(z) {
-        backplane.publish('onSave',z);
+        self.publish('onSave',z);
       });      
     }      
   };
@@ -793,7 +855,7 @@ ZZ.Widgets.Trainer = function(spec) {
 
 
   self.refresh = function() {
-    console.log('refresh called asdf');
+    //////console.log('refresh called asdf');
   
     header.empty();
     var translations = inputs.receiver.textResponsesToConcept(ZZ.langConcept);
@@ -829,7 +891,7 @@ ZZ.Widgets.Trainer = function(spec) {
         
     var tdMessage = DOM.td();
     
-    backplane.subscribe('onSave',function(o){
+    self.subscribe('onSave',function(o){
       ///console.log('wheee');
       setTimeout(function(){
             messageSearchWidget.focus();
@@ -920,6 +982,14 @@ ZZ.Widgets.Trainer = function(spec) {
       success: function(r) {
         var o = eval('(' + r + ')');
         var zam = ZZ.Zam(o);
+        ZZ.updateCacheArray(zam.receiverHash(),zam);
+        ZZ.updateCacheArray(zam.receiverMessageHash(),zam);
+        
+
+
+        //also, update the concept's hash's cached array... this should help the uploader refresh right...
+        ZZ.updateCacheArray(zam.receiverConcept().hash(),zam);
+        
         callback(zam);
       }
     });
@@ -1028,7 +1098,10 @@ ZZ.Widgets.Trainer = function(spec) {
       success: function(r) {
         var o = eval('(' + r + ')');        
         var zim = ZZ.Zim(o);
-        ////ZZ.cache.addZim(zim);        
+        ////ZZ.cache.addZim(zim);
+        
+        ZZ.updateCacheArray(zim.receiverHash(),zim);
+        ZZ.updateCacheArray(zim.receiverMessageHash(),zim);
         callback(zim);      
       }
     });
@@ -1052,13 +1125,58 @@ ZZ.Widgets.Trainer = function(spec) {
     });
   }
   
+  
+  function askZim(a,b,c) {
+    var r = jQuery.ajax({
+      type: 'POST',
+      url: ZZ.baseURL + '/ws',
+      data: { 
+        action: 'askzim',
+        a: a,
+        b: b,
+        c: c
+      },
+      async: false
+    }).responseText;
+    var evaluated = eval('(' + r + ')');
+    
+    ///////console.log('evaluated',evaluated);
+    var conjured = evaluated.collect(function(o) { return ZZ.Zim(o); });
+    return conjured; 
+  }
+
+  function askZam(a,b,c) {
+    var r = jQuery.ajax({
+      type: 'POST',
+      url: ZZ.baseURL + '/ws',
+      data: { 
+        action: 'askzam',
+        a: a,
+        b: b,
+        c: c
+      },
+      async: false
+    }).responseText;
+    var evaluated = eval('(' + r + ')');
+    
+    ///////console.log('evaluated',evaluated);
+    var conjured = evaluated.collect(function(o) { return ZZ.Zam(o); });
+    return conjured; 
+  }
+
+
+
+
+
+
+  
   function getZimsWhere(o) {
     var thisData = { action: 'get_zims_where' };
     if (typeof o.receiver != "undefined") { thisData.receiver = o.receiver; }
     if (typeof o.message != "undefined") { thisData.message = o.message; }
     if (typeof o.response != "undefined") { thisData.response = o.response; }
 
-    var hashed = 'zIms-where-' + JSON.stringify(o); 
+    var hashed = 'getZimsWhere-' + JSON.stringify(o); 
     
     console.log('getZimsWhere',hashed);
     
@@ -1296,7 +1414,10 @@ ZZ.Reader = function(spec) {
 
 
 ZZ.Widgets.Uploader = function(spec) {
-  var self = {};
+
+  var self = BSD.PubSub({});
+  
+  
   var thumb = DOM.img().attr('display','none').css('width','40px');
   var logoFileInput = DOM.input().attr('type','file');
   var glyphURLInput = DOM.input().addClass('search-box search-query').attr('placeholder','URL');
@@ -1351,7 +1472,7 @@ ZZ.Widgets.Uploader = function(spec) {
   self.reveal = function(url) {
     thumb.attr('src',url);
     thumb.show();  
-    spec.gossip.publish('new-upload-url',url);
+    self.publish('new-upload-url',url);
     logoFileInput.val('');
     glyphURLInput.val('');  
   }
@@ -1359,16 +1480,12 @@ ZZ.Widgets.Uploader = function(spec) {
 };
 
 ZZ.Widgets.Gallery = function(spec) {
-  var self = {};
 
   var columns = [];
   var history = [];
 
-  var backplane = BSD.PubSub({});
-
-  self.publish = backplane.publish;
-  self.subscribe = backplane.subscribe;
-
+  var self = BSD.PubSub({});
+  var backplane = self;
 
 
   self.currentConcept = spec.concept;
@@ -1414,6 +1531,43 @@ ZZ.Widgets.Gallery = function(spec) {
   };
 
 
+  self.getZimRow = function(z) {
+    var row = DOM.tr();
+    var recvTile = DOM.td().addClass('tile');
+    var recvC = z.receiverConcept();
+    recvTile.append(ZZ.badassLink(recvC));
+    recvTile.click(function() { self.recenterTo(recvC); });
+    row.append(recvTile);
+
+    var mTile = DOM.td().addClass('tile');
+    var mc = z.messageConcept();
+    mTile.append(ZZ.badassLink(mc));
+    mTile.click(function() { self.recenterTo(mc); });
+    row.append(mTile);
+    
+    var rTile = DOM.td().addClass('tile');
+    var rc = z.responseConcept();
+    rTile.append(ZZ.badassLink(rc));
+    rTile.click(function() { self.recenterTo(rc); });
+    row.append(rTile);
+    
+    var tdDelete = DOM.td();
+    var deleteButton = DOM.button('Delete').addClass('btn btn-mini btn-danger');
+    deleteButton.click(function(){
+      ZZ.deleteZim(z,function(response) {
+        ///console.log('response',response);
+        if (response.match(/OK/)) {
+          ZZ.cache.removeZim(z);
+          self.refresh();  
+        }
+      });
+    });
+    tdDelete.append(deleteButton);
+    row.append(tdDelete);
+    return row;
+  };
+
+
   self.recenterTo = function(concept) {
     self.currentConcept = concept;
     history.push(concept);
@@ -1441,6 +1595,8 @@ ZZ.Widgets.Gallery = function(spec) {
     table.append(headerRow);
 
     concept.zimsInvolved().each(function(z) {
+
+      /**
       var row = DOM.tr();
 
       var recvTile = DOM.td().addClass('tile');
@@ -1475,6 +1631,10 @@ ZZ.Widgets.Gallery = function(spec) {
       });
       tdDelete.append(deleteButton);
       row.append(tdDelete);
+      ******/
+      
+      var row = self.getZimRow(z);
+      
       table.append(row);
     });
 

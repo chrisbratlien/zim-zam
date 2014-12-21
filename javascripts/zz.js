@@ -40,6 +40,11 @@ ZZ.keycodes = {
   };
 
 
+ZZ.zamForConceptPrefix = 'ZAM-FOR-CONCEPT-';
+ZZ.zimForConceptPrefix = 'ZIM-FOR-CONCEPT-';
+
+
+
 
 
 
@@ -247,6 +252,8 @@ ZZ.cache.zams = function() {
 ZZ.Concept = function(spec) { //spec needs an id
   var self = spec;
   self.spec = spec;
+  self.type = 'concept';
+
   self.linkify = function() {
     return ZZ.baseURL + '/' + spec.id;
   };  
@@ -258,6 +265,13 @@ ZZ.Concept = function(spec) { //spec needs an id
 
   self.zimsInvolved = function() {
     console.log('ZIMS INVOLVED CALLED');
+
+    var hash = ZZ.zimForConceptPrefix + self.hash(); //the hash of this concept!!
+    if (typeof ZZ.cache[hash] != "undefined") {
+      console.log('[using cache]');
+      return ZZ.cache[hash];
+    }
+    console.log('[looking up...]');
     var iReceive = askZim(spec.id,WILD,WILD);
     var iMessage = askZim(WILD,spec.id,WILD); 
     var iRespond = askZim(WILD,WILD,spec.id);
@@ -265,6 +279,7 @@ ZZ.Concept = function(spec) { //spec needs an id
     result = result.concat(iReceive);
     result = result.concat(iMessage);
     result = result.concat(iRespond);
+    result.each(function(z){ ZZ.updateCacheArray(hash,z); });
     return result;
   };
 
@@ -272,10 +287,12 @@ ZZ.Concept = function(spec) { //spec needs an id
   self.zamsInvolved = function() {
     ////console.log('ZAMS INVOLVED CALLED');
     
-    var hash = self.hash(); //the hash of this concept!!
+    var hash = ZZ.zamForConceptPrefix + self.hash(); //the hash of this concept!!
     if (typeof ZZ.cache[hash] != "undefined") {
+      console.log('[using cache]');
       return ZZ.cache[hash];
     }
+    console.log('[looking up...]');
 
 
     //FIXME: consider a control flow where askzam calls can be batched!!!  optimize network traffic!
@@ -387,6 +404,29 @@ ZZ.Concept = function(spec) { //spec needs an id
     }
   };
 
+  self.luckyGet = function(msg) {
+    var messageConcepts = luckyGet(msg);
+    
+    console.log('messageConcepts',messageConcepts);
+
+    var result = messageConcepts.map(function(mc) {
+      return self.receive(mc);
+    });
+    
+    return result;
+
+    /****
+    return false;
+    
+    
+    
+    var filteredMsgs = them.select(function(o){
+      console.log('o',o,'spec.id',spec.id);
+      return o.spec.receiver == spec.id;
+    });
+    return filtered;
+    ********/
+  };
   
   self.receive = function(messageConcept) {
     var result = {
@@ -930,16 +970,11 @@ ZZ.Widgets.ConceptSearch = function(spec) {
       },
       success: function(r) {
         var o = eval('(' + r + ')');
-        var zam = ZZ.Zam(o);
-        ZZ.updateCacheArray(zam.receiverHash(),zam);
-        ZZ.updateCacheArray(zam.receiverMessageHash(),zam);
-        
-
+        var z = ZZ.Zam(o);
 
         //also, update the concept's hash's cached array... this should help the uploader refresh right...
-        ZZ.updateCacheArray(zam.receiverConcept().hash(),zam);
-        
-        callback(zam);
+        ZZ.updateCacheArray(ZZ.zamForConceptPrefix + z.receiverConcept().hash(),z);
+        callback(z);
       }
     });
   }
@@ -1046,12 +1081,10 @@ ZZ.Widgets.ConceptSearch = function(spec) {
       },
       success: function(r) {
         var o = eval('(' + r + ')');        
-        var zim = ZZ.Zim(o);
-        ////ZZ.cache.addZim(zim);
-        
-        ZZ.updateCacheArray(zim.receiverHash(),zim);
-        ZZ.updateCacheArray(zim.receiverMessageHash(),zim);
-        callback(zim);      
+        var z = ZZ.Zim(o);
+        //also, update the concept's hash's cached array... this should help the uploader refresh right...
+        ZZ.updateCacheArray(ZZ.zimForConceptPrefix + z.receiverConcept().hash(),z);
+        callback(z);      
       }
     });
   }
@@ -1114,10 +1147,16 @@ ZZ.Widgets.ConceptSearch = function(spec) {
   }
 
 
-
-
-
-
+  function luckyGet(request) {
+    var hits = askZam(WILD,1,request);
+    return hits.map(function(o){ return o.receiverConcept(); });
+  }
+  function luckyGetV1(request) {
+    var hits = askZam(WILD,1,request);
+    if (hits.length == 0) { return false; }
+    var first = hits.shift();
+    return first.receiverConcept();
+  }
   
   function getZimsWhere(o) {
     var thisData = { action: 'get_zims_where' };
@@ -1839,6 +1878,8 @@ ZZ.Widgets.Gallery = function(spec) {
   };
   return self;
 }
+
+
 
 
 ZZ.Widgets.ImageGallery = function(spec){

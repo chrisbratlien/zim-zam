@@ -14,6 +14,11 @@
   </style>
   <link href="<?php bloginfo('template_url'); ?>/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
   <link href="<?php bloginfo('template_url'); ?>/stylesheets/style.css" rel="stylesheet">
+  
+  
+  
+  
+  
 
   <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
   <!--[if lt IE 9]>
@@ -34,11 +39,52 @@
   <script src="<?php bloginfo('template_url'); ?>/javascripts/dom.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.pubsub.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/eachify.js"></script>  
+  <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.storage.js"></script>  
+  <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.widgets.lightbox.js"></script>  
+
+
+
+
+   <link rel="stylesheet" href="<?php bloginfo('template_url'); ?>/stylesheets/placeholder_polyfill.css">
+   <script src="<?php bloginfo('template_url'); ?>/javascripts/placeholder_polyfill.jquery.js" charset="utf-8"></script>
+  
+  
+
+
  <script type="text/javascript">
   if (typeof ZZ == "undefined") { var ZZ = {}; }
   ZZ.baseURL = '<?php bloginfo('url'); ?>';
+  
+  
+BSD.scrollTop = function() {
+  var doc = document.documentElement, body = document.body;
+  var left = (doc && doc.scrollLeft || body && body.scrollLeft || 0);
+  var top = (doc && doc.scrollTop  || body && body.scrollTop  || 0);
+
+  /////console.log('scrollTop, top is',top);
+
+  return top;
+};
+
+
+BSD.documentWidth = function() {
+var w=window.innerWidth
+|| document.documentElement.clientWidth
+|| document.body.clientWidth;
+
+/*
+var h=window.innerHeight
+|| document.documentElement.clientHeight
+|| document.body.clientHeight;
+*/
+  return w;
+}
+
+  
+  
  </script>
   <script type="text/javascript" src="<?php bloginfo('template_url'); ?>/javascripts/zz.js"></script>
+  <script type="text/javascript" src="<?php bloginfo('template_url'); ?>/javascripts/zz.widgets.trainer.js"></script>
 
   <?php wp_head(); ?>
 </head>

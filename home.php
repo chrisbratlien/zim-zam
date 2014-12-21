@@ -14,8 +14,18 @@ add_filter('body_class',function($classes) {
 
 
 get_header(); 
-require_language();
-$lang = current_language();
+
+
+
+//require_language();
+//$lang = current_language();
+
+
+
+
+
+
+
 ?>
     <div class="container-fluid">
       <div class="row-fluid">
@@ -53,7 +63,7 @@ $lang = current_language();
 
     </div><!--/.fluid-container-->
 <?php 
-  add_action('wp_footer',function() use($lang) {
+  add_action('wp_footer',function() {
 ?>
 
 <script type="text/javascript">
@@ -62,11 +72,16 @@ $lang = current_language();
 
 
 
-  ZZ.lang = <?php echo $lang; ?>;
+  ///ZZ.lang = <// //?/     ////php echo $lang; ?>;
+  
+  if (!ZZ.lang) { ZZ.lang = 1; }
+  
+  
   ZZ.langConcept = ZZ.Concept({ id: ZZ.lang });
   ZZ.langText = ZZ.langConcept.textResponsesToConcept(ZZ.langConcept).shift();
-  //ZZ.conceptID = < ?p hp /////echo $concept_id; ?>;
-  //ZZ.thisConcept = ZZ.Concept({ id: < ?php  echo $concept_id;?> });
+
+
+
 
   var campfire = BSD.PubSub({});
   jQuery(document).ready(function() {
@@ -143,6 +158,9 @@ $lang = current_language();
     
     
     campfire.subscribe('reveal-gallery-and-trainer',function(o){
+    
+      if (!ZZ.thisConcept) { return false; }
+    
       gallery.renderOn(galleryWrap);
 
       trainer = ZZ.Widgets.Trainer({
@@ -162,21 +180,79 @@ $lang = current_language();
       uploader.renderOn(uploaderWrap);
     });
     
+    
 
+    //restore recently viewed concept.
+    ZZ.storage = BSD.Storage('local');
+
+    ZZ.lang = false;
+
+
+
+
+
+    var recentLangID = ZZ.storage.getItem('recent-lang');
+    if (recentLangID) {
+       ZZ.lang = recentLangID;
+    }
+
+
+    ///ZZ.conceptID = ZZ.getVars(location.href).
+    
+    var urlParts = location.href.match(/\d+/);
+    
+    console.log('parts',urlParts);
+    
+    if (urlParts) {
+      ZZ.conceptID = parseInt(urlParts[0],10);
+      ZZ.thisConcept = ZZ.Concept({ id: ZZ.conceptID });  
+    }
+    else {
+      var recentID = ZZ.storage.getItem('recent-concept');
+      if (recentID) {
+         ZZ.conceptID = recentID;  
+          ZZ.thisConcept = ZZ.Concept({ id: recentID });
+      }
+    }
+
+    if (!gallery) {
+      gallery = ZZ.Widgets.Gallery({
+        concept: ZZ.thisConcept
+      });
+      campfire.publish('reveal-gallery-and-trainer',null);
+    }  
 
     /* wiring of event handlers */    
     
-    
+
+
+    /***    
     uploader.subscribe('new-upload-url',function(url) {
-    
       console.log('gallery',gallery);//gallery.currentConcept
-    
-    
       newZam({ receiver: gallery.currentConcept.id, message: ZZ.cache.glyphURLConcept.id, response: url },function(id) {
         gallery.refresh();
         
       });
     });
+    *****/
+
+
+    uploader.subscribe('new-upload',function(o) {
+    
+      console.log('gallery',gallery);//gallery.currentConcept
+    
+      
+    
+    
+    
+      newZam({ receiver: gallery.currentConcept.id, message: o.concept.id, response: o.url },function(id) {
+        gallery.refresh();
+        
+      });
+    });
+
+
+
 
 
   });

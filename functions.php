@@ -925,11 +925,85 @@ add_action('ws_upload_glyph_url',function($opts) {
 });
 
 
+add_action('ws_upload_datauri',function($opts) {
+
+  $gibberish = substr(scramble(),0,4);
+
+  $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
+  $justfile = sprintf('%s.%s',$gibberish,$ext);
+  
+  $uri = $opts['uri'];
+  
+  pr($uri,'uri, fool');
+  exit;
+  
+  $content = 'data://' . substr($uri, 5);
+  $binary = file_get_contents($uriPhp);
+  file_put_contents($newfile,$binary);
+});
+
+
+
+
+
+
+
+
+
+
+
+add_action('ws_get_glyph_from_datauri',function($opts) {
+  $url = $opts['url'];
+  
+  if (substr($url,0,5) == 'data:') {
+    $gibberish = substr(scramble(),0,4);
+  
+    $parts = preg_split('/:|;/',$url);
+    $mimetype = $parts[1];
+    $more_parts =  preg_split('/\//',$mimetype);
+    $ext = $more_parts[1];
+  
+  
+    $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
+    $justfile = sprintf('%s.%s',$gibberish,$ext);
+    
+    
+    //pr($url,'url, fool');
+    ///exit;
+    
+    $content = 'data://' . substr($url, 5);
+    $binary = file_get_contents($content);
+    file_put_contents($newfile,$binary);
+    echo $justfile;
+    exit;
+  }
+
+});
 
 add_action('ws_get_glyph_from_url',function($opts) {
   //print_r($opts);
   //print_r($_FILES);
   $url = $opts['url'];
+  
+  if (substr($url,0,5) == 'data:') {
+    $gibberish = substr(scramble(),0,4);
+  
+    $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
+    $justfile = sprintf('%s.%s',$gibberish,$ext);
+    
+    
+    pr($url,'url, fool');
+    exit;
+    
+    $content = 'data://' . substr($url, 5);
+    $binary = file_get_contents($uriPhp);
+    file_put_contents($newfile,$binary);
+    echo $justfile;
+    exit;
+  }
+  
+  
+  
   $ext = preg_replace('/^.*\./','',$url);    
   $gibberish = substr(scramble(),0,4);
   $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);

@@ -36,5 +36,24 @@ ul.search-results li { list-style-type: none; line-height: 2em; }
 #gallery-wrap .thumb-6 { width: 15%; }
 
 
+#gallery-wrap .thumb { min-width: 50px; width: 10%; }
+
+
+
+
+/**
 #gallery-wrap .tile:hover { background: red; color: white; cursor: pointer; }
 #gallery-wrap .tile:hover a { background: red; color: white; cursor: pointer; }
+***/
+
+.pdf img { width: 50px; }
+.pdf a { margin: 2px; }
+
+
+
+.thumbs { padding: 10px; }
+.thumbs img { box-shadow: 1px 0px 8px #bbb; margin-right: 5px; cursor: pointer; }
+
+.thumbs img:hover { box-shadow: 1px 0px 10px #666; }
+
+.box img { cursor: pointer; }

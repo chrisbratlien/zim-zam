@@ -1,3 +1,20 @@
+// Console-polyfill. MIT license.
+// https://github.com/paulmillr/console-polyfill
+// Make it safe to do console.log() always.
+(function(con) {
+  'use strict';
+  var prop, method;
+  var empty = {};
+  var dummy = function() {};
+  var properties = 'memory'.split(',');
+  var methods = ('assert,clear,count,debug,dir,dirxml,error,exception,group,' +
+     'groupCollapsed,groupEnd,info,log,markTimeline,profile,profiles,profileEnd,' +
+     'show,table,time,timeEnd,timeline,timelineEnd,timeStamp,trace,warn').split(',');
+  while (prop = properties.pop()) con[prop] = con[prop] || empty;
+  while (method = methods.pop()) con[method] = con[method] || dummy;
+})(this.console = this.console || {}); // Using `this` for web workers.
+
+
 if (typeof ZZ == "undefined") { var ZZ = {}; }
 ZZ.Widgets = {};
 
@@ -21,6 +38,40 @@ ZZ.keycodes = {
     LEFT: 37,
     RIGHT: 39
   };
+
+
+
+
+
+
+
+
+ZZ.getBase64Image = function(img) {
+    // Create an empty canvas element
+    var canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    // Copy the image contents to the canvas
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+
+    // Get the data-URL formatted image
+    // Firefox supports PNG and JPEG. You could check img.src to guess the
+    // original format, but be aware the using "image/jpg" will re-encode the image.
+    var dataURL = canvas.toDataURL("image/png");
+
+    return dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
+}
+
+
+ZZ.getVars = function(url) {
+      var vars = {};
+      var parts = url.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+          vars[key] = value;
+      });
+      return vars;
+};
 
 
 
@@ -197,7 +248,7 @@ ZZ.Concept = function(spec) { //spec needs an id
   var self = spec;
   self.spec = spec;
   self.linkify = function() {
-    return ZZ.baseURL + '/concept/' + spec.id;
+    return ZZ.baseURL + '/' + spec.id;
   };  
   
   self.hash = function() {
@@ -219,12 +270,18 @@ ZZ.Concept = function(spec) { //spec needs an id
 
 
   self.zamsInvolved = function() {
-    console.log('ZAMS INVOLVED CALLED');
+    ////console.log('ZAMS INVOLVED CALLED');
     
     var hash = self.hash(); //the hash of this concept!!
     if (typeof ZZ.cache[hash] != "undefined") {
       return ZZ.cache[hash];
     }
+
+
+    //FIXME: consider a control flow where askzam calls can be batched!!!  optimize network traffic!
+    // wherever that fix may belong...
+    
+    
 
     var iReceive = askZam(spec.id,WILD,WILD);
     var iMessage = askZam(WILD,spec.id,WILD); 
@@ -376,10 +433,45 @@ ZZ.Concept = function(spec) { //spec needs an id
     });
       
     return filtered;
-  }  
+  };
+
+
+
+  self.regularURLs = function() {
+    var resp = self.textResponsesToConcept(ZZ.cache.regularURLConcept);
+    ////console.log('resp',resp);
+    var filtered = resp.select(function(u){
+      return u.length > 0;
+    });
+      
+    return filtered;
+  };
+
+
+  self.youtubeURLs = function() {
+    var resp = self.textResponsesToConcept(ZZ.cache.youtubeURLConcept);
+    ////console.log('resp',resp);
+    var filtered = resp.select(function(u){
+      return u.length > 0;
+    });
+      
+    return filtered;
+  };
+  
+  self.pdfURLs = function() {
+    var resp = self.textResponsesToConcept(ZZ.cache.pdfURLConcept);
+    ////console.log('resp',resp);
+    var filtered = resp.select(function(u){
+      return u.length > 0;
+    });
+      
+    return filtered;
+  };
+    
 
   return self;
 };
+
 
 
 ZZ.Widgets.NewConceptForm = function(spec) {
@@ -607,6 +699,22 @@ ZZ.Widgets.Procrastinator = function(spec) {
 };
 
 
+
+ZZ.youtubeEmbed = function(url) {
+  var iframe = DOM.iframe();
+  iframe.attr('width',560);
+  iframe.attr('height',315);
+  iframe.attr('frameborder',0); 
+  iframe.attr('allowfullscreen',true); 
+  iframe.attr('src','http://www.youtube.com/embed/{id}?wmode=transparent'.supplant({ id: ZZ.getVars(url).v }));  
+  return iframe;
+}
+
+
+
+
+
+
 ZZ.Widgets.ConceptSearch = function(spec) {
   var self = BSD.PubSub({});
   var backplane = self;
@@ -624,7 +732,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
   });
   
   self.focus = function() {
-    ///console.log('i was told to focus');
+    console.log('ConceptSearch: i was told to focus');
     
     textBox.focus();
   }
@@ -786,165 +894,6 @@ ZZ.Widgets.ConceptSearch = function(spec) {
 
 };
 
-ZZ.Widgets.Trainer = function(spec) {
-  var self = BSD.PubSub({});
-  var backplane = self;
-
-  var inputs = {
-    receiver: spec.concept,
-    message: false,
-    response: false
-  };
-  
-  var messageSearchWidget = ZZ.Widgets.ConceptSearch({
-    placeholder: 'message search',
-    callback: function(concept) {
-      inputs.message = concept;
-      ///console.log('inputs',inputs);
-    }
-  });
-
-  var responseSearchWidget = ZZ.Widgets.ConceptSearch({
-    placeholder: 'response search',
-    callback: function(concept) {
-      inputs.response = concept;
-      ////console.log('inputs',inputs);
-    }
-  });
-  
-  self.recenterTo = function(concept) {
-    inputs.receiver = concept;
-    inputs.message = false;
-    inputs.response = false;
-    self.refresh();
-  };
-  
-  
-  self.save = function() {
-    inputs.response = inputs.response || responseSearchWidget.text(); /// dual purpose!! :D
-    var failure = ['receiver','message','response'].detect(function(prop){
-      return inputs[prop] == false; 
-    });
-    if (failure) {
-      alert('missing ' + failure);
-      return false;
-    }      
-
-
-    //console.log('inputs',inputs);
-    //return false;
-
-
-
-    if (typeof inputs.response == "string") {
-      newZam({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response },function(z) {
-        self.publish('onSave',z);
-      });
-    }
-    else {
-      newZim({ receiver: inputs.receiver.id, message: inputs.message.id, response: inputs.response.id },function(z) {
-        self.publish('onSave',z);
-      });      
-    }      
-  };
-
-
-
-  var header = DOM.h2();
-    var tdReceiver = DOM.td();
-
-
-  self.refresh = function() {
-    //////console.log('refresh called asdf');
-  
-    header.empty();
-    var translations = inputs.receiver.textResponsesToConcept(ZZ.langConcept);
-    header.append(DOM.span('Train '));
-    if (translations.length == 0) {
-      header.append(ZZ.badassLink(inputs.receiver));
-    }
-    else {
-      header.append(DOM.a(translations[0]).attr('href',inputs.receiver.linkify()));
-    }
-    header.append(DOM.span(' how to respond'));
-
-    tdReceiver.html(ZZ.badassLink(inputs.receiver));
-
-    messageSearchWidget.reset();
-    responseSearchWidget.reset();
-  };
-
-  self.renderOn = function(wrap) {
-
-  
-    var table = DOM.table().addClass('table table-striped table-bordered table-condensed');
-    
-    var headerRow = DOM.tr();    
-    headerRow.append(DOM.td('<strong>receiver</strong> (it)'));
-    headerRow.append(DOM.td('<strong>message</strong> (when asked...)'));
-    headerRow.append(DOM.td('<strong>response</strong> (responds with...)'));
-    
-    table.append(headerRow);
-    
-    var row = DOM.tr();
-    
-        
-    var tdMessage = DOM.td();
-    
-    self.subscribe('onSave',function(o){
-      ///console.log('wheee');
-      setTimeout(function(){
-            messageSearchWidget.focus();
-      },300);
-    });
-    
-    messageSearchWidget.renderOn(tdMessage); 
-    
-    
-    var tdResponse = DOM.td();
-    
-    var saveButton = DOM.button('Save').addClass('btn btn-primary pull-right');
-    saveButton.click(function() {
-      self.save();
-    });
-    
-    messageSearchWidget.subscribe('blur',function(o){
-      ////console.log('OMG I HEARD THAT');
-      responseSearchWidget.focus();
-    });
-    
-    
-    responseSearchWidget.subscribe('enter/return pressed',function(o) {
-      self.save();
-    });
-
-
-
-    responseSearchWidget.renderOn(tdResponse);
-
-
-    tdResponse.append(DOM.div('&nbsp;').css('clear','both'));
-    
-    var tdSave = DOM.td();
-    tdSave.append(saveButton);
-
-    row.append(tdReceiver);    
-    row.append(tdMessage);    
-    row.append(tdResponse);    
-    row.append(tdSave);    
-    table.append(row);
-    
-    wrap.append(header);
-    wrap.append(table);
-
-
-    messageSearchWidget.focus();
-    self.refresh(wrap);  
-
-  };
-
-  return self;  
-};
 
 
 
@@ -1285,6 +1234,11 @@ ZZ.Widgets.Trainer = function(spec) {
 
 ZZ.cache.glyphURLConcept = ZZ.Concept({ id: getZamReceivers(1,'glyph url')[0] });
 ZZ.cache.youtubeURLConcept = ZZ.Concept({ id: getZamReceivers(1,'youtube url')[0] });
+ZZ.cache.pdfURLConcept = ZZ.Concept({ id: getZamReceivers(1,'pdf url')[0] });
+ZZ.cache.regularURLConcept = ZZ.Concept({ id: getZamReceivers(1,'url')[0] });
+
+
+
 ZZ.cache.latitudeConcept = ZZ.Concept({ id: getZamReceivers(1,'latitude')[0] });
 ZZ.cache.longitudeConcept = ZZ.Concept({ id: getZamReceivers(1,'longitude')[0] });
 
@@ -1422,6 +1376,20 @@ ZZ.Widgets.Uploader = function(spec) {
   var logoFileInput = DOM.input().attr('type','file');
   var glyphURLInput = DOM.input().addClass('search-box search-query').attr('placeholder','URL');
 
+  var messageConcept = ZZ.cache.glyphURLConcept;
+
+
+
+  var search = ZZ.Widgets.ConceptSearch({
+      choice: messageConcept,
+      placeholder: 'Language / POV',
+      callback: function(concept) {
+        messageConcept = concept;
+      }
+    });///.renderOn(povWrap);
+
+
+
 
   self.uploadFiles = function(url, files) {
     //found some of this here: http://www.html5rocks.com/en/tutorials/file/xhr2/
@@ -1441,26 +1409,46 @@ ZZ.Widgets.Uploader = function(spec) {
   };
 
   self.renderOn = function(wrap) {
-    wrap.append(DOM.h1('glyph uploader'));
+    wrap.append(DOM.h1('uploader'));
+    search.renderOn(wrap);
     wrap.append(thumb);
     logoFileInput.change(function() {
       self.uploadFiles(ZZ.baseURL + '/ws', this.files);
     });
 
     glyphURLInput.change(function() {
-      jQuery.ajax({
-        type: 'POST',
-        url: ZZ.baseURL + '/ws',
-        data: { 
-        action: 'get_glyph_from_url', 
-          url: this.value
-        },
-        success: function(resp) {
-          var fullURL = ZZ.baseURL + '/uploads/' + resp;          
-          //console.log('full URL',fullURL);
-          self.reveal(fullURL);
-        }
-      });
+      console.log('this.value',this.value);
+    
+      if (this.value.substr(0,5) == 'data:') {
+        jQuery.ajax({
+          type: 'POST',
+          url: ZZ.baseURL + '/ws',
+          data: { 
+          action: 'get_glyph_from_datauri', 
+            url: this.value
+          },
+          success: function(resp) {
+            var fullURL = ZZ.baseURL + '/uploads/' + resp;          
+            /////console.log('okay so that happened');////full URL',fullURL);
+            self.reveal(fullURL);
+          }
+        });
+      }
+      else {
+        jQuery.ajax({
+          type: 'POST',
+          url: ZZ.baseURL + '/ws',
+          data: { 
+          action: 'get_glyph_from_url', 
+            url: this.value
+          },
+          success: function(resp) {
+            var fullURL = ZZ.baseURL + '/uploads/' + resp;          
+            //console.log('full URL',fullURL);
+            self.reveal(fullURL);
+          }
+        });
+      }
     });
 
     wrap.append(glyphURLInput);
@@ -1472,7 +1460,15 @@ ZZ.Widgets.Uploader = function(spec) {
   self.reveal = function(url) {
     thumb.attr('src',url);
     thumb.show();  
-    self.publish('new-upload-url',url);
+    
+    
+    self.publish('new-upload-url',url); //deprecated
+
+
+    self.publish('new-upload',{ concept: messageConcept, url: url});
+    
+    
+    
     logoFileInput.val('');
     glyphURLInput.val('');  
   }
@@ -1481,11 +1477,18 @@ ZZ.Widgets.Uploader = function(spec) {
 
 ZZ.Widgets.Gallery = function(spec) {
 
+
+  var uniqueID = Math.random().toString(16);
+
+
   var columns = [];
   var history = [];
 
   var self = BSD.PubSub({});
   var backplane = self;
+
+
+  ///ZZ.storage = BSD.Storage('local');
 
 
   self.currentConcept = spec.concept;
@@ -1502,8 +1505,34 @@ ZZ.Widgets.Gallery = function(spec) {
   //var thumb = DOM.img().addClass('thumb');
 
   var thumbsDiv = DOM.div().addClass('thumbs');
+  var thumbsLightbox = false;
+  var lightboxContent = DOM.div();
+  
+  thumbsLightbox = BSD.Widgets.Lightbox({
+    content: lightboxContent,
+    top: (BSD.scrollTop() * 1.1) + 'px',
+    left: '15%',
+    //width: '40%',
+    width: '70%',
+    scrollTopCallback: function() { return (BSD.scrollTop() + 40) + 'px' }
+  });
+  
+  
+  
+  
+  
+  
   var thumbs = [];
 
+
+  var youtubeDiv = DOM.div().addClass('youtube');
+  var youtubeVids = [];
+
+
+  var pdfDiv = DOM.div().addClass('pdf');
+  var pdfs = [];
+  
+  var urlDiv = DOM.div().addClass('url');
 
 
 
@@ -1522,13 +1551,94 @@ ZZ.Widgets.Gallery = function(spec) {
     console.log('refreshThumb',concept);
     thumbsDiv.empty();        
     var glyphURLs = concept.glyphURLs();
-    var thumbsClass = 'thumb-' + glyphURLs.length;
+    
+
+    
+
+    
+    var img = DOM.img();
+    lightboxContent.empty();
+    lightboxContent.append(img);
+    
+    var linked = glyphURLs.map(function(o){
+      return { url: o };
+    });
+    eachify(linked).eachPCN(function(o){
+      var me = o.current;
+      me.prev = o.prev;
+      me.next = o.next;
+    });
+    
+    console.log('updated linked',linked);
+    
+    var present = linked[0];
+
+    img.attr('src',present.url);
+    img.click(function(){
+      present = present.next;
+      img.attr('src',present.url);
+    });
+    
+    
+    ////console.log('lightbox create: ' + uniqueID);
+    
+
+
+      
+    
+    var thumbsClass = 'thumb thumb-' + glyphURLs.length;
     glyphURLs.each(function(gu){
       var thumb = DOM.img().addClass(thumbsClass);
       thumb.attr('src',gu);
       thumbsDiv.append(thumb);
     });
+    thumbsDiv.click(function(){
+      thumbsLightbox.show();
+      console.log('lightbox show',thumbsLightbox);
+    });
   };
+  
+  self.refreshYouTube = function(concept) {
+    console.log('refreshYouTube',concept);
+    youtubeDiv.empty();
+    var youtubeURLs = concept.youtubeURLs();
+    var countClass = 'youtube-' + youtubeURLs.length;
+    youtubeURLs.each(function(o){
+      var embed = ZZ.youtubeEmbed(o);
+      youtubeDiv.append(embed);
+    });
+  };
+
+
+
+  self.refreshPDFs = function(concept) {
+    console.log('refreshPDFs',concept);
+    pdfDiv.empty();
+    var pdfURLs = concept.pdfURLs();
+    pdfURLs.each(function(o){
+      var img = DOM.img().attr('src','http://zimzam.dev.bratliensoftware.com/uploads/6yqf.png'); //FIXME: make generic
+      var a = DOM.a().attr('href',o).attr('target','_blank');
+      a.append(img);
+      pdfDiv.append(a);
+    });
+  };
+
+  self.refreshRegularURLs = function(concept) {
+    console.log('refreshRegularURLs',concept);
+    urlDiv.empty();
+    var ul = DOM.ul();
+    
+    var regularURLs = concept.regularURLs();
+    regularURLs.each(function(o){
+      var a = DOM.a(o).attr('href',o).attr('target','_blank');
+      var li = DOM.li(a);
+      ul.append(li);
+    });
+      urlDiv.append(ul);
+  };
+
+
+
 
 
   self.getZimRow = function(z) {
@@ -1536,19 +1646,19 @@ ZZ.Widgets.Gallery = function(spec) {
     var recvTile = DOM.td().addClass('tile');
     var recvC = z.receiverConcept();
     recvTile.append(ZZ.badassLink(recvC));
-    recvTile.click(function() { self.recenterTo(recvC); });
+    //////recvTile.click(function() { self.recenterTo(recvC); });
     row.append(recvTile);
 
     var mTile = DOM.td().addClass('tile');
     var mc = z.messageConcept();
     mTile.append(ZZ.badassLink(mc));
-    mTile.click(function() { self.recenterTo(mc); });
+    /////mTile.click(function() { self.recenterTo(mc); });
     row.append(mTile);
     
     var rTile = DOM.td().addClass('tile');
     var rc = z.responseConcept();
     rTile.append(ZZ.badassLink(rc));
-    rTile.click(function() { self.recenterTo(rc); });
+    //////rTile.click(function() { self.recenterTo(rc); });
     row.append(rTile);
     
     var tdDelete = DOM.td();
@@ -1568,12 +1678,29 @@ ZZ.Widgets.Gallery = function(spec) {
   };
 
 
+
+
+
+  
+
+
   self.recenterTo = function(concept) {
+  
+    if (!concept) { return false; }
+  
     self.currentConcept = concept;
     history.push(concept);
     
+    console.log('recent',concept);
+    ZZ.storage.setItem('recent-concept',concept.id);
+    
+    
+    
   
     self.refreshThumb(concept);  
+    self.refreshPDFs(concept);
+    self.refreshRegularURLs(concept);
+    self.refreshYouTube(concept);
 
 
     link.html('');
@@ -1692,8 +1819,13 @@ ZZ.Widgets.Gallery = function(spec) {
   };
 
   self.renderOn = function(wrap) {
+
+
     ////wrap.append(DOM.h1('Gallery'));
     wrap.append(thumbsDiv);
+    wrap.append(pdfDiv);
+    wrap.append(urlDiv);
+    wrap.append(youtubeDiv);
     wrap.append(link);
     wrap.append(DOM.div().css('clear','both'));
     wrap.append(back);

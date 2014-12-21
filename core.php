@@ -66,10 +66,10 @@ function route($uri) {
   //print_r($uri);
   //exit;
   
-  
   if ($uri == base_uri()) {
     ////echo "HOME!!!";
     require_once('home.php');
+    exit;
     return null;
   }
 
@@ -98,6 +98,19 @@ function route($uri) {
   
   );
   
+  
+  if (preg_match('/\/(\d+)$/',$uri,$matches)) {
+      ////print_r($matches);
+      /////die('ok');
+      
+      //die($concept_id);
+      
+      $concept_id = $matches[1];
+      //////die($concept_id . ' << lookie here');
+      require_once('home.php');
+      exit;
+      //////require_once('concept.php');
+  }
   
   
   if (preg_match('/\/concept\/(\d+)$/',$uri,$matches)) {

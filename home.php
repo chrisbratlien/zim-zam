@@ -42,6 +42,7 @@ get_header();
             <div style="clear: both;">&nbsp;</div>
             <div style="clear: both;">&nbsp;</div>
             <div id="new-concept-wrap"></div>
+            <div id="recent-concepts-wrap"></div>
             
             <?php ////////do_action('new_concept_form',$lang); ?>
         </div><!-- span3 -->
@@ -69,6 +70,8 @@ get_header();
 <script type="text/javascript">
 
 
+    //restore recently viewed concept.
+    ZZ.storage = BSD.Storage('local');
 
 
 
@@ -81,7 +84,21 @@ get_header();
   ZZ.langText = ZZ.langConcept.textResponsesToConcept(ZZ.langConcept).shift();
 
 
-
+  function drawRecentFew() {
+    var wrap = jQuery('#recent-concepts-wrap');
+    wrap.empty();
+    
+    var ul = DOM.ul().addClass('search-results recent');
+    
+    
+    wrap.append(DOM.h4('Recently Viewed'));
+    ZZ.history.recentFew().each(function(o){
+      var li = DOM.li();
+      li.append(ZZ.badassLink(o));
+      ul.append(li);
+    });
+    wrap.append(ul);
+  }
 
   var campfire = BSD.PubSub({});
   jQuery(document).ready(function() {
@@ -178,12 +195,16 @@ get_header();
       });
       gallery.refresh();      
       uploader.renderOn(uploaderWrap);
+      
+      gallery.subscribe('recenter',function(concept){
+        drawRecentFew();
+      });
+      drawRecentFew();
+      
     });
     
     
 
-    //restore recently viewed concept.
-    ZZ.storage = BSD.Storage('local');
 
     ZZ.lang = false;
 
@@ -201,18 +222,20 @@ get_header();
     
     var urlParts = location.href.match(/\d+/);
     
-    console.log('parts',urlParts);
+    ////console.log('parts',urlParts);
     
     if (urlParts) {
       ZZ.conceptID = parseInt(urlParts[0],10);
       ZZ.thisConcept = ZZ.Concept({ id: ZZ.conceptID });  
     }
     else {
-      var recentID = ZZ.storage.getItem('recent-concept');
-      if (recentID) {
-         ZZ.conceptID = recentID;  
-          ZZ.thisConcept = ZZ.Concept({ id: recentID });
+
+      var recentConcept = ZZ.history.recent();
+      if (recentConcept) {
+        ZZ.conceptID = recentConcept.id;  
+        ZZ.thisConcept = recentConcept;
       }
+      
     }
 
     if (!gallery) {
@@ -238,18 +261,21 @@ get_header();
 
 
     uploader.subscribe('new-upload',function(o) {
-    
       console.log('gallery',gallery);//gallery.currentConcept
-    
-      
-    
-    
-    
       newZam({ receiver: gallery.currentConcept.id, message: o.concept.id, response: o.url },function(id) {
         gallery.refresh();
-        
       });
     });
+    
+    if (gallery) {
+      //console.log('hey i gotta gallery!',gallery);
+      gallery.subscribe('recenter',function(concept){
+        drawRecentFew();
+      });
+      drawRecentFew();
+
+    }
+
 
 
 

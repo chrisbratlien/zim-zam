@@ -53,8 +53,8 @@ BSD.Widgets.Lightbox = function (spec) {
     box.css('background', 'white');
     box.css('opacity', '1.0');
     box.css('z-index', 152);
-    box.css('padding', '1em');
-    box.css('font-size', '1.5em');
+    ///box.css('padding', '1em');
+    ///box.css('font-size', '1.5em');
     ///box.html(spec.content.html());
     box.append(spec.content);///////.html());
 
@@ -62,8 +62,6 @@ BSD.Widgets.Lightbox = function (spec) {
     var close = DOM.div();
     close.addClass('close');
     close.css('position', 'absolute');
-    close.css('right', '0px');
-    close.css('top', '0px');
     close.css('background', 'black');
     close.css('color', 'white');
     close.css('padding', '0.3em');
@@ -85,7 +83,7 @@ BSD.Widgets.Lightbox = function (spec) {
         wrap.css('z-index', 151);
         wrap.css('top', '0%');
         
-        
+        overlay.height(jQuery(document).height());
         overlay.fadeIn();
 
 

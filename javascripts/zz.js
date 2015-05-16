@@ -895,7 +895,11 @@ ZZ.Widgets.ConceptSearch = function(spec) {
         }
       }
       ////console.log('KEYUP!!!');
-      stoner.beg();
+
+      console.log('this',this);
+      if (this.value.length > 2) {
+        stoner.beg();
+      }
     });
     
     textBox.keydown(function(e){
@@ -1514,6 +1518,78 @@ ZZ.Widgets.Uploader = function(spec) {
   return self;
 };
 
+
+
+ZZ.History = function(spec) {
+
+  var max = 20;
+
+  var self = BSD.PubSub({});
+
+  self.past = [];
+
+  self.push = function(concept) {
+  
+    var mr = self.mostRecent();
+    console.log('mr',mr);
+    if (mr && self.mostRecent().hash() == concept.hash()) {
+      return false;/// nothing to push!
+    }
+    
+    self.past = self.past.reject(function(o){ return o.hash() == concept.hash(); }); //git rid of earlier instances of this...most recent = most useful
+    
+    
+
+    self.past.push(concept);
+
+    while (self.past.length > max) {
+      self.past.shift();    
+    }
+
+
+    self.save();
+  };
+  
+  self.save = function() {
+    ZZ.storage.setItem('concept-history-length',self.past.length);
+    for (var i = 0; i < self.past.length; i += 1) {
+      ZZ.storage.setItem('concept-history-' + i, self.past[i].id);
+    }
+  };
+  
+  self.load = function() {
+    self.past = [];
+    
+    var length = ZZ.storage.getItem('concept-history-length');
+    if (!length) { return false; } 
+    for (var i = 0; i < length; i += 1) {
+      var id = ZZ.storage.getItem('concept-history-' + i);
+      self.past.push(ZZ.Concept({ id: id }));  
+    }
+  };
+  
+  
+  self.mostRecent = function() {
+    return self.past[self.past.length-1];
+  };
+  self.recent = self.mostRecent;
+  
+  
+  self.recentFew = function() {
+    var them = self.past.map(function(o){ return o; });
+    them.reverse();
+    console.log('them!!! them!!!',them);
+    return them;
+  };
+
+  return self;
+};
+
+ZZ.history = ZZ.History();
+ZZ.history.load();
+
+
+
 ZZ.Widgets.Gallery = function(spec) {
 
 
@@ -1549,16 +1625,12 @@ ZZ.Widgets.Gallery = function(spec) {
   
   thumbsLightbox = BSD.Widgets.Lightbox({
     content: lightboxContent,
-    top: (BSD.scrollTop() * 1.1) + 'px',
-    left: '15%',
+    top: (BSD.scrollTop() * 1.3) + 'px',
+    left: '5%',
     //width: '40%',
-    width: '70%',
-    scrollTopCallback: function() { return (BSD.scrollTop() + 40) + 'px' }
+    width: '90%',
+    scrollTopCallback: function() { return (BSD.scrollTop() * 1.3) + 'px' }
   });
-  
-  
-  
-  
   
   
   var thumbs = [];
@@ -1717,12 +1789,6 @@ ZZ.Widgets.Gallery = function(spec) {
   };
 
 
-
-
-
-  
-
-
   self.recenterTo = function(concept) {
   
     if (!concept) { return false; }
@@ -1730,10 +1796,9 @@ ZZ.Widgets.Gallery = function(spec) {
     self.currentConcept = concept;
     history.push(concept);
     
-    console.log('recent',concept);
-    ZZ.storage.setItem('recent-concept',concept.id);
-    
-    
+    console.log('recent!!!!',concept);
+
+    ZZ.history.push(concept);
     
   
     self.refreshThumb(concept);  
@@ -1761,46 +1826,7 @@ ZZ.Widgets.Gallery = function(spec) {
     table.append(headerRow);
 
     concept.zimsInvolved().each(function(z) {
-
-      /**
-      var row = DOM.tr();
-
-      var recvTile = DOM.td().addClass('tile');
-      var recvC = z.receiverConcept();
-      recvTile.append(ZZ.badassLink(recvC));
-      recvTile.click(function() { self.recenterTo(recvC); });
-      row.append(recvTile);
-
-
-      var mTile = DOM.td().addClass('tile');
-      var mc = z.messageConcept();
-      mTile.append(ZZ.badassLink(mc));
-      mTile.click(function() { self.recenterTo(mc); });
-      row.append(mTile);
-      
-      var rTile = DOM.td().addClass('tile');
-      var rc = z.responseConcept();
-      rTile.append(ZZ.badassLink(rc));
-      rTile.click(function() { self.recenterTo(rc); });
-      row.append(rTile);
-      
-      var tdDelete = DOM.td();
-      var deleteButton = DOM.button('Delete').addClass('btn btn-mini btn-danger');
-      deleteButton.click(function(){
-        ZZ.deleteZim(z,function(response) {
-          ///console.log('response',response);
-          if (response.match(/OK/)) {
-            ZZ.cache.removeZim(z);
-            self.refresh();  
-          }
-        });
-      });
-      tdDelete.append(deleteButton);
-      row.append(tdDelete);
-      ******/
-      
       var row = self.getZimRow(z);
-      
       table.append(row);
     });
 
@@ -1848,6 +1874,8 @@ ZZ.Widgets.Gallery = function(spec) {
     });
 
     self.publish('onRecenterTo',concept);
+    self.publish('recenter',concept);
+
 
     return false;////////////////ZING!!!
   };

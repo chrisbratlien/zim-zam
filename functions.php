@@ -899,6 +899,12 @@ function scramble() {
 
 }
 
+function get_gibberish() {
+  $result = substr(scramble(),0,8);
+  return $result;
+}
+
+
 
 add_action('ws_upload_glyph_url',function($opts) {
   //print_r($opts);
@@ -911,7 +917,7 @@ add_action('ws_upload_glyph_url',function($opts) {
     $ext = preg_replace('/^.*\./','',$v['name']);    
     
     
-    $gibberish = substr(scramble(),0,4);
+    $gibberish = get_gibberish();
     
     $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
     $justfile = sprintf('%s.%s',$gibberish,$ext);
@@ -927,7 +933,7 @@ add_action('ws_upload_glyph_url',function($opts) {
 
 add_action('ws_upload_datauri',function($opts) {
 
-  $gibberish = substr(scramble(),0,4);
+  $gibberish = get_gibberish();
 
   $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
   $justfile = sprintf('%s.%s',$gibberish,$ext);
@@ -956,7 +962,7 @@ add_action('ws_get_glyph_from_datauri',function($opts) {
   $url = $opts['url'];
   
   if (substr($url,0,5) == 'data:') {
-    $gibberish = substr(scramble(),0,4);
+    $gibberish = get_gibberish();
   
     $parts = preg_split('/:|;/',$url);
     $mimetype = $parts[1];
@@ -986,7 +992,7 @@ add_action('ws_get_glyph_from_url',function($opts) {
   $url = $opts['url'];
   
   if (substr($url,0,5) == 'data:') {
-    $gibberish = substr(scramble(),0,4);
+    $gibberish = get_gibberish();
   
     $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
     $justfile = sprintf('%s.%s',$gibberish,$ext);
@@ -1005,7 +1011,7 @@ add_action('ws_get_glyph_from_url',function($opts) {
   
   
   $ext = preg_replace('/^.*\./','',$url);    
-  $gibberish = substr(scramble(),0,4);
+  $gibberish = get_gibberish();
   $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
   $justfile = sprintf('%s.%s',$gibberish,$ext);
   file_put_contents($newfile,file_get_contents($url));

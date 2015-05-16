@@ -56,29 +56,33 @@
   ZZ.baseURL = '<?php bloginfo('url'); ?>';
   
   
-BSD.scrollTop = function() {
-  var doc = document.documentElement, body = document.body;
-  var left = (doc && doc.scrollLeft || body && body.scrollLeft || 0);
-  var top = (doc && doc.scrollTop  || body && body.scrollTop  || 0);
-
-  /////console.log('scrollTop, top is',top);
-
-  return top;
-};
-
-
-BSD.documentWidth = function() {
-var w=window.innerWidth
-|| document.documentElement.clientWidth
-|| document.body.clientWidth;
-
-/*
-var h=window.innerHeight
-|| document.documentElement.clientHeight
-|| document.body.clientHeight;
-*/
-  return w;
-}
+  ZZ.storage = BSD.Storage('local');
+  
+  
+  
+  BSD.scrollTop = function() {
+    var doc = document.documentElement, body = document.body;
+    var left = (doc && doc.scrollLeft || body && body.scrollLeft || 0);
+    var top = (doc && doc.scrollTop  || body && body.scrollTop  || 0);
+  
+    /////console.log('scrollTop, top is',top);
+  
+    return top;
+  };
+  
+  
+  BSD.documentWidth = function() {
+  var w=window.innerWidth
+  || document.documentElement.clientWidth
+  || document.body.clientWidth;
+  
+  /*
+  var h=window.innerHeight
+  || document.documentElement.clientHeight
+  || document.body.clientHeight;
+  */
+    return w;
+  }
 
   
   

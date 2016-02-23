@@ -126,7 +126,7 @@ function route($uri) {
       require_once('gallery.php');
   }
   else {
-    require_once('404.php');
+    require_once('404-not-found.php');
   }  
   
 }

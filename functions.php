@@ -968,7 +968,9 @@ add_action('ws_get_glyph_from_datauri',function($opts) {
     $mimetype = $parts[1];
     $more_parts =  preg_split('/\//',$mimetype);
     $ext = $more_parts[1];
-  
+ 
+
+ 
   
     $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
     $justfile = sprintf('%s.%s',$gibberish,$ext);
@@ -1008,13 +1010,18 @@ add_action('ws_get_glyph_from_url',function($opts) {
     exit;
   }
   
+	$data = file_get_contents($url);
   
+  $file_info = new finfo(FILEINFO_MIME_TYPE);
+  $mime_type = $file_info->buffer($data);
+  $short_mime = preg_replace('/.*\//','',$mime_type);
+  $ext = $short_mime;
+
   
-  $ext = preg_replace('/^.*\./','',$url);    
   $gibberish = get_gibberish();
   $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
   $justfile = sprintf('%s.%s',$gibberish,$ext);
-  file_put_contents($newfile,file_get_contents($url));
+  file_put_contents($newfile,$data);
   echo $justfile;
   exit;
 });

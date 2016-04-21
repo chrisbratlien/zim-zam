@@ -3,6 +3,19 @@
 date_default_timezone_set('America/Chicago');
 define('WILD',-1);
 
+
+
+
+define('APP_PATH',dirname(__FILE__));
+define('LIBRARY_DB_PATH',sprintf('%s/data/zz.db',APP_PATH));
+/**
+define('LIBRARY_PATH',sprintf("%s/data/music/library",APP_PATH));
+define('INCOMING_PATH',sprintf("%s/data/music/incoming",APP_PATH));
+define('ARTWORK_PATH',sprintf("%s/data/artwork",APP_PATH));
+**/
+
+
+
 ini_set('display_errors',1);
 
 require_once 'local.php';
@@ -71,6 +84,35 @@ function echo_if($cond,$str) {
     echo $str;
   }
 }
+
+
+
+
+function init_db() {
+  try {
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $conn->exec("    CREATE TABLE IF NOT EXISTS concepts " .
+      "(concept_id INTEGER PRIMARY KEY," .
+      " modified DATETIME DEFAULT CURRENT_TIMESTAMP)");
+    $conn->exec("  CREATE TABLE IF NOT EXISTS zim " .
+      "(zim_id INTEGER PRIMARY KEY," .
+      " receiver INTEGER," .
+      " message INTEGER," .
+      " response INTEGER)");
+    $conn->exec("  CREATE TABLE IF NOT EXISTS zam " .
+      "(zam_id INTEGER PRIMARY KEY," .
+      " receiver INTEGER," .
+      " message INTEGER," .
+      " response TEXT)");
+  }
+  catch(PDOException $e)
+  {
+    print 'Exception : '.$e->getMessage();
+  }
+}
+
+
 
 
 function is_language_known() {
@@ -147,15 +189,17 @@ function get_zims_where($wheres = Array(),$conjunction) {
   $sql = sprintf('SELECT * FROM zim WHERE 1');
   foreach($wheres as $w) {
     $sql .= sprintf(' %s %s',$conjunction,$w);
-  }  
-  /**
-  pp($wheres,'wheres');
-  pp($sql,'sql');
-  exit;
-  **/
-	$mysql_result = mysql_query($sql);	
+  } 
+  
+  
+  pr($sql,'sql'); 
+
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  ////$q = $conn->prepare($sql);
+  $rows = $conn->query($sql);
   $result = array();
-	while ($row = mysql_fetch_object($mysql_result)) {
+	while ($row = $rows->fetchObject()) {
 		array_push($result,new Zim($row));
 	}  
   return $result;
@@ -175,6 +219,9 @@ function get_zims_involving($id) {
     $b = askzim(WILD,$id,WILD);
     $c = askzim(WILD,WILD,$id);
   ***/
+ 
+ /**** 
+  
   $sql = sprintf('SELECT * FROM zim WHERE (receiver = %d) OR (message = %d) OR (response = %d)',$id,$id,$id);
 	$mysql_result = mysql_query($sql);	
   $result = array();
@@ -182,6 +229,24 @@ function get_zims_involving($id) {
 		array_push($result,new Zim($row));
 	}  
   return $result;
+**********/  
+  
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  ////$q = $conn->prepare($sql);
+
+  $q = $conn->prepare('SELECT * FROM `zim` WHERE (receiver = :receiver) OR (message = :message) OR (response = :response)');
+  $q->execute(Array(
+      ':receiver' => $id,
+      ':message' => $id,
+      ':response'=> $id
+    ));
+  /////$rows = $conn->query($sql);
+  $result = array();
+	while ($row = $q->fetchObject()) {
+		array_push($result,new Zim($row));
+	}  
+  return $result;  
 }
 
 function get_all_zims() {
@@ -193,18 +258,17 @@ function get_all_zims() {
 
 function get_zams_where($wheres = Array(),$conjunction) {
   if (empty($conjunction)) { die('empty conjunction'); }
-  $sql = sprintf('SELECT * FROM zam WHERE 1');
+  $sql = sprintf('SELECT * FROM `zam` WHERE 1');
   foreach($wheres as $w) {
     $sql .= sprintf(' %s %s',$conjunction,$w);
-  }  
+  }
   
-  ///print_r($sql);
-  ///exit;
-  
-  
-	$mysql_result = mysql_query($sql);	
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  ////$q = $conn->prepare($sql);
+  $rows = $conn->query($sql);
   $result = array();
-	while ($row = mysql_fetch_object($mysql_result)) {
+	while ($row = $rows->fetchObject()) {
 		array_push($result,new Zam($row));
 	}  
   return $result;
@@ -216,13 +280,13 @@ function constraint($fname,$fval) {
   $type = gettype($fval);
   /////pp($type,'gettype fval');
   if ($fval == WILD) {
-    return 'TRUE'; //dont add any sql constraint
+    return '1'; ///formerly TRUE/// //dont add any sql constraint
   }
   if ($type == 'integer') {
     return sprintf('`%s` = %d',$fname,$fval);
   }
   if ($type == 'string') {
-    return sprintf('`%s` = "%s"',$fname,mysql_real_escape_string($fval));
+    return sprintf('`%s` = "%s"',$fname,$fval);
   }
   return 'constraint doesnt know what to do.  ';
 }
@@ -297,17 +361,34 @@ function get_first_zam_response($recv,$msg) {
 
 
 function get_zams_involving($id) {
+  /*********
   $sql = sprintf('SELECT * FROM zam WHERE (receiver = %d) OR (message = %d) ',$id,$id);
 	$mysql_result = mysql_query($sql);	
   $result = array();
 	while ($row = mysql_fetch_object($mysql_result)) {
 		array_push($result,new Zam($row));
 	}  
+	*******/
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  ////$q = $conn->prepare($sql);
+  $q = $conn->prepare('SELECT * FROM `zam` WHERE (receiver = :receiver) OR (message = :message)');
+  $q->execute(Array(
+      ':receiver' => $id,
+      ':message' => $id,
+    ));
+  /////$rows = $conn->query($sql);
+  $result = array();
+	while ($row = $q->fetchObject()) {
+		array_push($result,new Zam($row));
+	}
   return $result;
 }
 
 function batch_get_zams_involving($comma_separated_ids) {
 
+
+  /***
   $sql = sprintf('SELECT * FROM zam WHERE receiver IN (%s) OR message IN (%s) ',$comma_separated_ids,$comma_separated_ids);
   
   //print_r($sql);
@@ -318,6 +399,29 @@ function batch_get_zams_involving($comma_separated_ids) {
 		array_push($result,new Zam($row));
 	}  
   return $result;
+  ***/
+
+
+
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  ////$q = $conn->prepare($sql);
+  $q = $conn->prepare('SELECT * FROM `zam` WHERE (receiver IN (:ids))  OR (message IN (:ids))');
+  $q->execute(Array(
+      ':ids' => $comma_separated_ids,
+    ));
+  $result = array();
+	while ($row = $q->fetchObject()) {
+		array_push($result,new Zam($row));
+	}
+  return $result;
+
+
+
+
+
+
+
 }
 
 function concept_url($id) {
@@ -428,9 +532,19 @@ function linkify_zim_for_table_with_glyphs($zim,$lang) {
 
 
 function new_concept() {
+
+  /***
   $sql = "INSERT INTO `concepts` (`concept_id`) VALUES (NULL);";
   $q = mysql_query($sql);
   $concept_id = mysql_insert_id();
+  return new Concept($concept_id);
+  ***/
+  
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  $q = $conn->prepare('INSERT INTO `concepts` (`concept_id`) VALUES (NULL);');
+  $q->execute();
+  $concept_id = $conn->lastInsertId();
   return new Concept($concept_id);
 }
 
@@ -441,6 +555,7 @@ function new_zam($opts) {
   $zam_response = $opts['response'];
   preg_match('/^\d+$/',$zam_message) and preg_match('/^\d+$/',$zam_receiver) or die('zam not numeric');
 
+  /***
   $sql = sprintf("INSERT INTO `zam` (receiver,message,response) VALUES (%d,%d,'%s')",
     $zam_receiver,
     $zam_message,
@@ -448,6 +563,20 @@ function new_zam($opts) {
   );
   $q = mysql_query($sql);
   $zam_id = mysql_insert_id();
+  ****/
+
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  $q = $conn->prepare('INSERT INTO `zam`  (receiver,message,response) VALUES (:receiver,:message,:response)');
+  $q->execute(Array(
+      ':receiver'=>$zam_receiver,
+      ':message'=>$zam_message,
+      ':response'=> $zam_response
+    ));
+    
+  $zam_id = $conn->lastInsertId();
+
+
 
   $them = get_zams_where(array(sprintf('zam_id = %d',$zam_id)),'AND');
   return array_shift($them);
@@ -459,8 +588,10 @@ function new_zim($opts) {
   $zim_receiver = $opts['receiver'];
   $zim_message = $opts['message'];
   $zim_response = $opts['response'];
-  preg_match('/^\d+$/',$zim_message) and preg_match('/^\d+$/',$zim_receiver) or die('zim not numeric');
+  preg_match('/^\d+$/',$zim_message) and preg_match('/^\d+$/',$zim_receiver) and preg_match('/^\d+$/',$zim_response) or die('zim not numeric');
 
+
+  /****
   $sql = sprintf("INSERT INTO `zim` (receiver,message,response) VALUES (%d,%d,%d)",
     $zim_receiver,
     $zim_message,
@@ -468,6 +599,19 @@ function new_zim($opts) {
   );
   $q = mysql_query($sql);
   $zim_id = mysql_insert_id();
+  *****/
+  
+  
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  $q = $conn->prepare('INSERT INTO `zim`  (receiver,message,response) VALUES (:receiver,:message,:response)');
+  $q->execute(Array(
+      ':receiver'=>$zim_receiver,
+      ':message'=>$zim_message,
+      ':response'=> $zim_response
+  ));
+  $zim_id = $conn->lastInsertId();
+
   
   
   $them = get_zims_where(array(sprintf('zim_id = %d',$zim_id)),'AND');
@@ -487,15 +631,33 @@ function new_concept_and_zam($opts) {
 function update_zam_response($opts) {
   $zam_id = $opts['zam_id'];
   $response = $opts['response'];
+
+
+
+
+  /****
   $sql = sprintf('UPDATE `zam` SET response = "%s" WHERE zam_id = %d',
     mysql_real_escape_string($response),
     $zam_id);
-    
+   
   //print_r($sql);
   //exit;
     
   $q = mysql_query($sql);
   return mysql_error();
+
+
+  *********/
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  $q = $conn->prepare('UPDATE `zam` SET response = :response');
+  $q->execute(Array(
+      ':response'=> $response
+  ));
+  $zim_id = $conn->lastInsertId();
+  
+  return $zim_id;
+
 }
 add_action('ws_update_zam_response',function($opts){  
   $result = update_zam_response($opts);
@@ -528,11 +690,25 @@ function delete_zam($opts) {
   preg_match('/^\d+$/',$zam_id) or die('invalid zam_id');
   (ZZ_API_KEY == $api_key) or die('invalid zzak');
   
+  
+  /****
   $sql = sprintf('DELETE FROM `zam` WHERE zam_id = %d',$zam_id);
   //print_r($sql);
   //exit;
   $q = mysql_query($sql);
   //return mysql_error();
+****/
+
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  $q = $conn->prepare('DELETE FROM `zam` WHERE zam_id = :zam_id');
+  $q->execute(Array(
+      ':zam_id'=>$zam_id,
+    ));
+
+
+
+
   return 'OK';
 }
 add_action('ws_delete_zam',function($opts){  
@@ -551,11 +727,24 @@ function delete_zim($opts) {
   preg_match('/^\d+$/',$zim_id) or die('invalid zim_id');
   (ZZ_API_KEY == $api_key) or die('invalid zzak');
   
+
+  /***
   $sql = sprintf('DELETE FROM `zim` WHERE zim_id = %d',$zim_id);
   //print_r($sql);
   //exit;
   $q = mysql_query($sql);
   //return mysql_error();
+  ******/
+  
+  
+  
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  $q = $conn->prepare('DELETE FROM `zim` WHERE zim_id = :zim_id');
+  $q->execute(Array(
+      ':zim_id'=>$zim_id,
+    ));
+  
   return 'OK';
 }
 add_action('ws_delete_zim',function($opts){  
@@ -669,7 +858,7 @@ add_action('ws_get_zams_where',function($opts) {
     array_push($wheres,sprintf('message = %d',$opts['message']));
   }
   if (array_key_exists('response',$opts)) {
-    array_push($wheres,sprintf('response = "%s"',mysql_real_escape_string($opts['response'])));
+    array_push($wheres,sprintf('response = "%s"',$opts['response']));
   }
 
   $result = get_zams_where($wheres,'AND');
@@ -683,7 +872,7 @@ add_action('ws_get_zams_where',function($opts) {
 function foo_zam_search($str) {
   $wheres = Array();
   $lang = 1;
-  array_push($wheres,sprintf('response LIKE "%s"','%' . mysql_real_escape_string($str) . '%'));
+  array_push($wheres,sprintf('response LIKE "%s"','%' . $str . '%'));
   ///NOTE: why limit this?!? ///array_push($wheres,sprintf('message = %d',$lang));
   $result = get_zams_where($wheres,'AND');
   $specs = array_map(function ($e) { return $e->spec; },$result);
@@ -707,62 +896,8 @@ add_action('ws_get_zam_receivers',function($opts) {
 
 /** BOILERPLATE ***********************************************/
 
+/*** HINT: MAKE TAGS OUT ZIMZAM  primitives....  don't make them any more special ...... ***/
 
-
-function tags_for_coupon_id($coupon_id) {
-
-	$tags = Array();
-
-	$sql = "SELECT tags.* FROM coupons, tagmap, tags WHERE
-			tags.tag_id = tagmap.tag_id AND
-			coupons.coupon_id = tagmap.coupon_id AND
-			coupons.coupon_id = $coupon_id";
-		
-	$result = mysql_query($sql);
-	
-	while ($row = mysql_fetch_array($result)) {
-		array_push($tags,$row['name']);
-	}
-
-	return $tags;
-
-}
-
-function tag_id_of_string($str) {
-	$sql = sprintf('SELECT tag_id FROM tags WHERE name = "%s"',$str);
-	////print_r($sql);
-	
-	$result = mysql_query($sql);
-	echo mysql_error();
-	
-	if (mysql_num_rows($result) == 0)
-		return -1;
-	$row = mysql_fetch_array($result);
-		return $row['tag_id'];
-}
-
-function create_coupon_tagmap($coupon_id,$tag_id) {
-
-	$sql = "SELECT tagmap_id FROM tagmap where coupon_id=$coupon_id and tag_id=$tag_id";
-	//print "SQL IS $sql";
-	$result = mysql_query($sql);
-	if (mysql_num_rows($result) == 0) {
-	
-		$sql2 = "INSERT INTO tagmap (`coupon_id`,`tag_id`) VALUES($coupon_id,$tag_id);";
-		//print "SQL2 IS $sql2";
-		mysql_query($sql2);
-	}
-}
-
-
-function create_tag($str) {
-
-	if (tag_id_of_string($str) == -1) {	
-		$sql = sprintf("INSERT INTO tags (`name`) VALUES('%s')",$str);		
-		mysql_query($sql);
-	}
-	return tag_id_of_string($str);
-}
 
 function strtotags($str) {
 
@@ -783,111 +918,6 @@ function strtotags($str) {
 	return $tags; //array
 
 }
-
-
-add_action('ws_new_coupon',function($opts){
-
-  $tags = $opts['tags'];
-  $vendor_id = $opts['vendor_id'];  
-
-  $sql = sprintf("INSERT INTO  `coupons` (`vendor_id`,`item`,`details`) " .
-    " VALUES (%s, '%s', '%s')",
-    $vendor_id,
-    mysql_real_escape_string($opts['item']),
-    mysql_real_escape_string($opts['details'])
-  );
-
-  $q = mysql_query($sql);
-
-  echo mysql_error();
-  $coupon_id = mysql_insert_id();
-
-	foreach ($tags as $tagstring) {
-		$tag_id = create_tag($tagstring);
-		create_coupon_tagmap($coupon_id,$tag_id);
-	}
-
-
-  echo $coupon_id;
-  exit;
-
-});
-
-add_action('ws_new_vendor',function($opts) {
-  /////print_r($opts);
-
-  $sql = sprintf("INSERT INTO vendors (vendor_name,logo) VALUES ('%s','%s')",
-    mysql_real_escape_string($opts['vendor_name']),
-    mysql_real_escape_string($opts['logo'])
-  );
-  
-  /////echo $sql;
-  
-  mysql_query($sql);
-  echo mysql_error();
-
-});
-
-
-function get_vendors() {
-  $sql = "SELECT * FROM vendors order by vendor_name ASC";
-  $r = mysql_query($sql);
-  $result = array();
-  while ($row = mysql_fetch_object($r)) {
-    $result[] = $row;  
-  }
-  return $result;
-}
-
-
-
-
-function tag_search($tags) {
-  $tagcnt = count($tags);
-
-  $sql = "SELECT * FROM coupons WHERE 1" ;//default
-  if ($tagcnt > 0) {
-  	$s = '';
-  	foreach($tags as $tag) {
-  		$s .= "'" . $tag . "',";
-  	}
-  	$s = trim($s,',');
-    
-
-    $sql = sprintf("SELECT A.*,vendors.* FROM (SELECT coupons.*
-    		FROM coupons, tagmap, tags
-    		WHERE tagmap.tag_id = tags.tag_id
-    		AND (tags.name IN (%s))
-    		AND tagmap.coupon_id = coupons.coupon_id
-    		GROUP BY coupons.coupon_id
-    		HAVING COUNT( coupons.coupon_id )=%d) AS A
-    JOIN vendors ON
-    vendors.vendor_id = A.vendor_id",
-      $s,
-      $tagcnt);
-  }
-	
-  //print_r($sql);
-
-	$r = mysql_query($sql);
-	
-	$result = array();
-	while ($row = mysql_fetch_object($r)) {
-		array_push($result,$row);
-	}
-
-	return $result;
-
-}
-
-
-add_action('ws_tag_search',function($opts) {
-  $tags = $opts['tags']; //should be an array  
-  echo json_encode(tag_search($tags));
-  exit;
-});
-
-
 
 
 function scramble() {

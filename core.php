@@ -52,15 +52,6 @@ function route($uri) {
   // start the session
   @session_start();
   header("Cache-control: private"); //IE 6 Fix
-  ////include('vars.php'); // defines dbhost,dbuser,dbpass
-  if (!mysql_connect($dbhost,$dbuser,$dbpass)) {
-    echo "DB error";
-    session_destroy();
-    die();
-  }
-  mysql_select_db($dbname);
-
-
   $uri = clean_uri($uri);
   
   //print_r($uri);

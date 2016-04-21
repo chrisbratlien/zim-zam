@@ -110,7 +110,41 @@ function init_db() {
   {
     print 'Exception : '.$e->getMessage();
   }
+  $conn = null;
+  
 }
+
+
+function populate_db() {
+
+
+
+  $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  ////$q = $conn->prepare($sql);
+  $q = $conn->prepare('SELECT * FROM `concepts`');
+  $q->execute();
+  $result = array();
+  
+  if ($q->rowCount() == 0) {
+    $q->closeCursor();
+    $conn = null;
+    $o = new_concept();
+    new_zim(Array(
+      'receiver' => $o->id,
+      'message' =>  $o->id,
+      'response' => $o->id) 
+    );
+    new_zam(Array(
+      'receiver' => $o->id,
+      'message' => $o->id,
+      'response' => 'in English') 
+    );
+  }
+  $conn = null;
+  
+}
+
 
 
 
@@ -192,7 +226,7 @@ function get_zims_where($wheres = Array(),$conjunction) {
   } 
   
   
-  pr($sql,'sql'); 
+  /////pr($sql,'sql'); 
 
   $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
   $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -201,7 +235,9 @@ function get_zims_where($wheres = Array(),$conjunction) {
   $result = array();
 	while ($row = $rows->fetchObject()) {
 		array_push($result,new Zim($row));
-	}  
+	}
+  $conn = null;
+	  
   return $result;
 }
 function get_zims_with_response($id) {
@@ -245,7 +281,10 @@ function get_zims_involving($id) {
   $result = array();
 	while ($row = $q->fetchObject()) {
 		array_push($result,new Zim($row));
-	}  
+	}
+  $q->closeCursor();	
+  $conn = null;
+	  
   return $result;  
 }
 
@@ -257,6 +296,12 @@ function get_all_zims() {
 /* ZAM */
 
 function get_zams_where($wheres = Array(),$conjunction) {
+
+
+  ////pr($wheres,'gzw');
+
+
+
   if (empty($conjunction)) { die('empty conjunction'); }
   $sql = sprintf('SELECT * FROM `zam` WHERE 1');
   foreach($wheres as $w) {
@@ -266,11 +311,20 @@ function get_zams_where($wheres = Array(),$conjunction) {
   $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
   $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   ////$q = $conn->prepare($sql);
+  
+  /////pr($sql,'S QQQ LLLLLL');
+  
+  
+  
   $rows = $conn->query($sql);
   $result = array();
 	while ($row = $rows->fetchObject()) {
 		array_push($result,new Zam($row));
 	}  
+	
+	/////pr($result,'RES>>');
+  $conn = null;
+	
   return $result;
 }
 
@@ -278,7 +332,8 @@ function get_zams_where($wheres = Array(),$conjunction) {
 
 function constraint($fname,$fval) {
   $type = gettype($fval);
-  /////pp($type,'gettype fval');
+  //pp($type,'gettype fval');
+  ///pp($fval,'fval');
   if ($fval == WILD) {
     return '1'; ///formerly TRUE/// //dont add any sql constraint
   }
@@ -301,12 +356,21 @@ function askzim($a,$b,$c) {
   return $them;  
 }
 function askzam($a,$b,$c) {
+
+  //pr($a,'a');
+  //pr($b,'b');
+  //pr($c,'c');
+
   $wheres = Array();
   array_push($wheres,
     constraint('receiver',$a),
     constraint('message',$b),
     constraint('response',$c)
   );
+  
+  ////pr($wheres,'wheres');
+  
+  
   $them = get_zams_where($wheres,'AND');
   return $them;  
 }
@@ -377,6 +441,10 @@ function get_zams_involving($id) {
       ':receiver' => $id,
       ':message' => $id,
     ));
+
+  $q->closeCursor();	
+  $conn = null;
+
   /////$rows = $conn->query($sql);
   $result = array();
 	while ($row = $q->fetchObject()) {
@@ -542,9 +610,13 @@ function new_concept() {
   
   $conn = new PDO(sprintf('sqlite:%s',LIBRARY_DB_PATH));
   $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-  $q = $conn->prepare('INSERT INTO `concepts` (`concept_id`) VALUES (NULL);');
+  $q = $conn->prepare('INSERT INTO `concepts` DEFAULT VALUES');
+  
   $q->execute();
   $concept_id = $conn->lastInsertId();
+  $q->closeCursor();
+  $conn = null;
+  
   return new Concept($concept_id);
 }
 
@@ -588,6 +660,12 @@ function new_zim($opts) {
   $zim_receiver = $opts['receiver'];
   $zim_message = $opts['message'];
   $zim_response = $opts['response'];
+  
+
+  ///////pp($opts,'opts?');
+  ///exit;
+  
+  
   preg_match('/^\d+$/',$zim_message) and preg_match('/^\d+$/',$zim_receiver) and preg_match('/^\d+$/',$zim_response) or die('zim not numeric');
 
 

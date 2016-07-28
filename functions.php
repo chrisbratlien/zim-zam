@@ -1122,7 +1122,7 @@ add_action('ws_get_glyph_from_url',function($opts) {
   $gibberish = get_gibberish();
   $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
   $justfile = sprintf('%s.%s',$gibberish,$ext);
-  file_put_contents($newfile,file_get_contents($url));
+  file_put_contents($newfile,curl_get($url));
   echo $justfile;
   exit;
 });
@@ -1195,8 +1195,15 @@ function curl_get($url, array $get = array(), array $options = array())
         CURLOPT_URL => $url. (strpos($url, '?') === FALSE ? '?' : ''). http_build_query($get),
         CURLOPT_HEADER => 0,
         CURLOPT_RETURNTRANSFER => TRUE,
-        CURLOPT_TIMEOUT => I35TIED_CURL_TIMEOUT
+        CURLOPT_TIMEOUT => 30,
+        //CURLOPT_SSL_VERIFYPEER => true,
+        //CURLOPT_SSL_VERIFYHOST => true,
+        CURLOPT_CAINFO => dirname(__FILE__) . '/data/cacert.pem',
     );
+
+
+
+
 
     $ch = curl_init();
     curl_setopt_array($ch, ($options + $defaults));

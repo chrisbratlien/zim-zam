@@ -2,6 +2,14 @@
 
 
 
+$data = curl_get('https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Dallas_Area_Rapid_Transit_logo.svg/150px-Dallas_Area_Rapid_Transit_logo.svg.png');
+
+var_dump($data);
+
+
+
+exit;
+
 init_db();
 
 populate_db();

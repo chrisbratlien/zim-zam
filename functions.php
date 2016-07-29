@@ -86,6 +86,17 @@ function echo_if($cond,$str) {
 }
 
 
+function cblog($msg,$label = '') {
+  
+  $stamp = date('Y-m-d H:i:s');
+  $msg = sprintf('%s %s: %s',$stamp,$label, print_r($msg,true));
+  $filename = dirname(__FILE__) . '/data/cblog.txt';
+  $fp = fopen($filename, 'a') or exit("Can't open $filename");
+  fwrite($fp,$msg . "\n");
+  fclose($fp);
+}
+
+
 
 
 function init_db() {
@@ -1076,7 +1087,22 @@ add_action('ws_get_glyph_from_datauri',function($opts) {
     $mimetype = $parts[1];
     $more_parts =  preg_split('/\//',$mimetype);
     $ext = $more_parts[1];
-  
+ 
+    $data = file_get_contents($url);
+
+    $file_info = new finfo(FILEINFO_MIME_TYPE);
+    $mime_type = $file_info->buffer($data);
+    $short_mime = preg_replace('/.*\//','',$mime_type);
+
+    cblog($short_mime,'short_mime');
+    
+    $ext = $short_mime;
+    
+    if ($ext == "svg+xml") {
+      $ext = "svg";
+    }
+    
+ 
   
     $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
     $justfile = sprintf('%s.%s',$gibberish,$ext);
@@ -1116,13 +1142,27 @@ add_action('ws_get_glyph_from_url',function($opts) {
     exit;
   }
   
+ 
+
+  $data = curl_get($url);
+
+  $file_info = new finfo(FILEINFO_MIME_TYPE);
+  $mime_type = $file_info->buffer($data);
+  $short_mime = preg_replace('/.*\//','',$mime_type);
+  $ext = $short_mime;
+
+    cblog($short_mime,'short_mime');
+    $ext = $short_mime;
+    if ($ext == "svg+xml") {
+      $ext = "svg";
+    }
+
   
-  
-  $ext = preg_replace('/^.*\./','',$url);    
+  //$ext = preg_replace('/^.*\./','',$url);    
   $gibberish = get_gibberish();
   $newfile = sprintf('%s/%s.%s',dirname(__FILE__) . '/uploads',$gibberish,$ext);
   $justfile = sprintf('%s.%s',$gibberish,$ext);
-  file_put_contents($newfile,curl_get($url));
+  file_put_contents($newfile,$data);
   echo $justfile;
   exit;
 });

@@ -1626,9 +1626,9 @@ ZZ.Widgets.Gallery = function(spec) {
   thumbsLightbox = BSD.Widgets.Lightbox({
     content: lightboxContent,
     top: (BSD.scrollTop() * 1.3) + 'px',
-    left: '5%',
+    //left: '5%',
     //width: '40%',
-    width: '90%',
+    //width: '90%',
     scrollTopCallback: function() { return (BSD.scrollTop() * 1.3) + 'px' }
   });
   

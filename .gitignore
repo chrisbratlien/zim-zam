@@ -2,3 +2,5 @@
 schema.txt
 local.php
 uploads/*
+data
+data/zz.db

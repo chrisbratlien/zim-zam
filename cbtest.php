@@ -1,6 +1,21 @@
 <?php
 
 
+
+$data = curl_get('https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Dallas_Area_Rapid_Transit_logo.svg/150px-Dallas_Area_Rapid_Transit_logo.svg.png');
+
+var_dump($data);
+
+
+
+exit;
+
+init_db();
+
+populate_db();
+
+
+
 /***
 q('?',1,'fruit');
 
@@ -33,10 +48,19 @@ q('?',ZZ_IS_A,ZZ_USER);
 //pp(get_all_zims(),'ALL');
 /////exit;
 
-$english = array_shift(askzam(WILD,WILD,'in english'))->spec->receiver;
-///pp($english,'english');
-$set = askzimzam(WILD,$english,'fruit');
-pp($set,'set');
+$ask = askzam(WILD,WILD,'in English');
+
+pp($ask,'ask resp');
+
+
+if (!empty($ask)) {
+  $hit = array_shift($ask);
+  $english = $hit->spec->receiver;
+  pp($english,'english');
+  $set = askzimzam(WILD,$english,'fruit');
+  pp($set,'set');
+}
+
 
 /**
 pp(text_translations_of_concept(5,1),'translated with integers');

@@ -31,7 +31,7 @@
   <meta name="author" content="">
   <!-- JS
   ================================================== -->
-  <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.7.1.min.js"></script>
   <?php echo base_url_js(); ?>
   <script src="<?php bloginfo('template_url'); ?>/javascripts/array.js"></script>
   <script src="<?php bloginfo('template_url'); ?>/javascripts/string.supplant.js"></script>

@@ -21,8 +21,8 @@
 
     	<link rel="apple-touch-icon" href="images/zimzam-white.png">
       
-			<link rel="icon" type="image/png" href="images/zimzam-white.png"">
 
+			<link rel="icon" type="image/png" href="images/zimzam-white.png">
 
   
   

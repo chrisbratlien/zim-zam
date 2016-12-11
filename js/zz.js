@@ -264,11 +264,11 @@ ZZ.Concept = function(spec) { //spec needs an id
 
 
   self.zimsInvolved = function() {
-    console.log('ZIMS INVOLVED CALLED');
+    ///console.log('ZIMS INVOLVED CALLED');
 
     var hash = ZZ.zimForConceptPrefix + self.hash(); //the hash of this concept!!
     if (typeof ZZ.cache[hash] != "undefined") {
-      console.log('[using cache]');
+      ///console.log('[using cache]');
       return ZZ.cache[hash];
     }
     console.log('[looking up...]');
@@ -297,7 +297,7 @@ ZZ.Concept = function(spec) { //spec needs an id
     
     var hash = ZZ.zamForConceptPrefix + self.hash(); //the hash of this concept!!
     if (typeof ZZ.cache[hash] != "undefined") {
-      console.log('[using cache]');
+      //console.log('[using cache]');
       return ZZ.cache[hash];
     }
     console.log('[looking up...]');
@@ -1548,7 +1548,7 @@ ZZ.History = function(spec) {
   self.push = function(concept) {
   
     var mr = self.mostRecent();
-    console.log('mr',mr);
+    ///console.log('mr',mr);
     if (mr && self.mostRecent().hash() == concept.hash()) {
       return false;/// nothing to push!
     }
@@ -1595,7 +1595,7 @@ ZZ.History = function(spec) {
   self.recentFew = function() {
     var them = self.past.map(function(o){ return o; });
     them.reverse();
-    console.log('them!!! them!!!',them);
+    ///console.log('them!!! them!!!',them);
     return them;
   };
 
@@ -1676,7 +1676,7 @@ ZZ.Widgets.Gallery = function(spec) {
 
 
   self.refreshThumb = function(concept) {
-    console.log('refreshThumb',concept);
+    //console.log('refreshThumb',concept);
     thumbsDiv.empty();        
     var glyphURLs = concept.glyphURLs();
     
@@ -1697,7 +1697,7 @@ ZZ.Widgets.Gallery = function(spec) {
       me.next = o.next;
     });
     
-    console.log('updated linked',linked);
+    //console.log('updated linked',linked);
     
     var present = linked[0];
 
@@ -1727,7 +1727,7 @@ ZZ.Widgets.Gallery = function(spec) {
   };
   
   self.refreshYouTube = function(concept) {
-    console.log('refreshYouTube',concept);
+    //console.log('refreshYouTube',concept);
     youtubeDiv.empty();
     var youtubeURLs = concept.youtubeURLs();
     var countClass = 'youtube-' + youtubeURLs.length;
@@ -1740,7 +1740,7 @@ ZZ.Widgets.Gallery = function(spec) {
 
 
   self.refreshPDFs = function(concept) {
-    console.log('refreshPDFs',concept);
+    //console.log('refreshPDFs',concept);
     pdfDiv.empty();
     var pdfURLs = concept.pdfURLs();
     pdfURLs.each(function(o){
@@ -1752,7 +1752,7 @@ ZZ.Widgets.Gallery = function(spec) {
   };
 
   self.refreshRegularURLs = function(concept) {
-    console.log('refreshRegularURLs',concept);
+    //console.log('refreshRegularURLs',concept);
     urlDiv.empty();
     var ul = DOM.ul();
     
@@ -1813,7 +1813,7 @@ ZZ.Widgets.Gallery = function(spec) {
     self.currentConcept = concept;
     history.push(concept);
     
-    console.log('recent!!!!',concept);
+    ///console.log('recent!!!!',concept);
 
     ZZ.history.push(concept);
     

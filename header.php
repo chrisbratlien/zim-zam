@@ -16,6 +16,14 @@
   <link href="<?php bloginfo('template_url'); ?>/stylesheets/style.css" rel="stylesheet">
   
   
+
+
+
+    	<link rel="apple-touch-icon" href="images/zimzam-white.png">
+      
+			<link rel="icon" type="image/png" href="images/zimzam-white.png"">
+
+
   
   
   

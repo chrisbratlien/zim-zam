@@ -279,7 +279,15 @@ ZZ.Concept = function(spec) { //spec needs an id
     result = result.concat(iReceive);
     result = result.concat(iMessage);
     result = result.concat(iRespond);
-    result.each(function(z){ ZZ.updateCacheArray(hash,z); });
+		
+
+		if (result.length == 0) {
+			ZZ.cache[hash] = result;
+			return result;
+		}
+    result.each(function(z){ 
+			ZZ.updateCacheArray(hash,z); 
+		});
     return result;
   };
 
@@ -307,6 +315,15 @@ ZZ.Concept = function(spec) { //spec needs an id
     var result = [];
     result = result.concat(iReceive);
     result = result.concat(iMessage);
+
+    if (result.length == 0) {
+      ZZ.cache[hash] = result;
+      return result;
+    }
+    result.each(function(z){
+      ZZ.updateCacheArray(hash,z);
+    });
+
     result.each(function(z){ ZZ.updateCacheArray(hash,z); });
     return result;
   };

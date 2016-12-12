@@ -398,14 +398,12 @@ ZZ.Concept = function(spec) { //spec needs an id
 
   self.textResponsesToConcept = function(other) {
 
+    /***
+    straightforward, but no caching
 		var result = askZam(self.id,other.id,WILD).map(function(o) { return o.response; });
 		return result;
+    ********/
 
-    /****
-		return [];
-
-    var involved = self.zamsInvolved();
-    ///console.log('involved',involved);
     var relevantZams = self.zamsInvolved().select(function(zam) { 
       ////console.log('zam',zam);
       return zam.receiver == self.id && zam.message == other.id; 
@@ -414,7 +412,6 @@ ZZ.Concept = function(spec) { //spec needs an id
     
     var result = relevantZams.map(function(z) { return z.response; });
     return result;
-    ********/
   };
 
 

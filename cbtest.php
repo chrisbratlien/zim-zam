@@ -2,21 +2,21 @@
 
 
 
-$data = curl_get('https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Dallas_Area_Rapid_Transit_logo.svg/150px-Dallas_Area_Rapid_Transit_logo.svg.png');
+$x = [4,5,6];
 
-var_dump($data);
 
+var_dump($x);
+
+
+
+$set = askzam(5,[2,26],WILD);
+
+pp($set,'set');
 
 
 exit;
 
-init_db();
-
-populate_db();
-
-
-
-/***
+/**
 q('?',1,'fruit');
 
 // ==>

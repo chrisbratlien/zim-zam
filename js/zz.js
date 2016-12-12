@@ -1135,9 +1135,9 @@ ZZ.Widgets.ConceptSearch = function(spec) {
       url: ZZ.baseURL + '/ws',
       data: { 
         action: 'askzim',
-        a: a,
-        b: b,
-        c: c
+        receiver: a,
+        message: b,
+        response: c
       },
       async: false
     }).responseText;
@@ -1154,9 +1154,9 @@ ZZ.Widgets.ConceptSearch = function(spec) {
       url: ZZ.baseURL + '/ws',
       data: { 
         action: 'askzam',
-        a: a,
-        b: b,
-        c: c
+        receiver: a,
+        message: b,
+        response: c
       },
       async: false
     }).responseText;

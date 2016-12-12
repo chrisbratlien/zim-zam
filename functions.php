@@ -354,6 +354,11 @@ function constraint($fname,$fval) {
   if ($type == 'string') {
     return sprintf('`%s` = "%s"',$fname,$fval);
   }
+	if ($type == 'array') {
+  	$result = sprintf('`%s` IN (%s)',$fname,join(',',$fval));
+    /////pp($result,'result');
+		return $result;
+	}
   return 'constraint doesnt know what to do.  ';
 }
 function askzim($a,$b,$c) {
@@ -848,14 +853,16 @@ add_action('ws_delete_zim',function($opts){
 
 
 add_action('ws_askzim',function($opts){
-  $result = askzim($opts['a'],$opts['b'],$opts['c']);
+	//pr($opts,'opts');
+	//exit;
+	$result = askzim($opts['receiver'],$opts['message'],$opts['response']);
   $specs = array_map(function ($e) { return $e->spec; },$result);
   echo json_encode($specs);
   exit;
 });
 
 add_action('ws_askzam',function($opts){
-  $result = askzam($opts['a'],$opts['b'],$opts['c']);
+	$result = askzam($opts['receiver'],$opts['message'],$opts['response']);
   $specs = array_map(function ($e) { return $e->spec; },$result);
   echo json_encode($specs);
   exit;

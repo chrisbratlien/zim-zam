@@ -397,6 +397,11 @@ ZZ.Concept = function(spec) { //spec needs an id
   };
 
   self.textResponsesToConcept = function(other) {
+
+		var result = askZam(self.id,other.id,-1).map(function(o) { return o.response; });
+		return result;
+		return [];
+
     var involved = self.zamsInvolved();
     ///console.log('involved',involved);
     var relevantZams = self.zamsInvolved().select(function(zam) { 

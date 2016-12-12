@@ -1434,7 +1434,7 @@ ZZ.Widgets.Uploader = function(spec) {
   
   var thumb = DOM.img().attr('display','none').css('width','40px');
   var logoFileInput = DOM.input().attr('type','file');
-  var glyphURLInput = DOM.input().addClass('search-box search-query').attr('placeholder','URL');
+  var glyphURLInput = DOM.input().addClass('search-box search-query').attr('placeholder','URL').attr('maxlength',9999999);
 
   var messageConcept = ZZ.cache.glyphURLConcept;
 
@@ -1465,6 +1465,7 @@ ZZ.Widgets.Uploader = function(spec) {
       var fullURL = ZZ.baseURL + '/uploads/' + justTheFile;      
       self.reveal(fullURL);    
     };
+    console.log('formData',formData);
     xhr.send(formData);  // multipart/form-data
   };
 
@@ -1476,8 +1477,10 @@ ZZ.Widgets.Uploader = function(spec) {
       self.uploadFiles(ZZ.baseURL + '/ws', this.files);
     });
 
-    glyphURLInput.change(function() {
-      console.log('this.value',this.value);
+    glyphURLInput.change(function(e) {
+      console.log('this.value length',this.value.length,e);
+      ///console.log("DEBUG");
+      ////return false;
     
       if (this.value.substr(0,5) == 'data:') {
         jQuery.ajax({

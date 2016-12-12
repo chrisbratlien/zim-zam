@@ -1065,12 +1065,13 @@ add_action('ws_upload_datauri',function($opts) {
   $justfile = sprintf('%s.%s',$gibberish,$ext);
   
   $uri = $opts['uri'];
-  
-  pr($uri,'uri, fool');
-  exit;
+  cblog($uri,'uri, yes with an i, fool**222');
+  /////hpr($uri,'uri, yes with an i, fool**222');
+  //exit;
+
   
   $content = 'data://' . substr($uri, 5);
-  $binary = file_get_contents($uriPhp);
+  $binary = file_get_contents($content);
   file_put_contents($newfile,$binary);
 });
 
@@ -1086,6 +1087,10 @@ add_action('ws_upload_datauri',function($opts) {
 
 add_action('ws_get_glyph_from_datauri',function($opts) {
   $url = $opts['url'];
+  
+  
+  
+  
   
   if (substr($url,0,5) == 'data:') {
     $gibberish = get_gibberish();
@@ -1117,7 +1122,16 @@ add_action('ws_get_glyph_from_datauri',function($opts) {
     //pr($url,'url, fool');
     ///exit;
     
+    
+    cblog(strlen($url),'strlen(url)');
+    cblog($url,'ws_get_glyph_from_datauri url');
+    
+    
     $content = 'data://' . substr($url, 5);
+    
+    cblog($content,'content???');
+    
+    
     $binary = file_get_contents($content);
     file_put_contents($newfile,$binary);
     echo $justfile;
@@ -1138,11 +1152,10 @@ add_action('ws_get_glyph_from_url',function($opts) {
     $justfile = sprintf('%s.%s',$gibberish,$ext);
     
     
-    pr($url,'url, fool');
-    exit;
+    cblog($url,'url, fool**1');
     
     $content = 'data://' . substr($url, 5);
-    $binary = file_get_contents($uriPhp);
+    $binary = file_get_contents($content);
     file_put_contents($newfile,$binary);
     echo $justfile;
     exit;

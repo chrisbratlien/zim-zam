@@ -323,7 +323,7 @@ function get_zams_where($wheres = Array(),$conjunction) {
   $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   ////$q = $conn->prepare($sql);
   
-  /////pr($sql,'S QQQ LLLLLL');
+  //pr($sql,'S QQQ LLLLLL');
   
   
   

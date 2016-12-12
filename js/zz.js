@@ -398,8 +398,10 @@ ZZ.Concept = function(spec) { //spec needs an id
 
   self.textResponsesToConcept = function(other) {
 
-		var result = askZam(self.id,other.id,-1).map(function(o) { return o.response; });
+		var result = askZam(self.id,other.id,WILD).map(function(o) { return o.response; });
 		return result;
+
+    /****
 		return [];
 
     var involved = self.zamsInvolved();
@@ -412,6 +414,7 @@ ZZ.Concept = function(spec) { //spec needs an id
     
     var result = relevantZams.map(function(z) { return z.response; });
     return result;
+    ********/
   };
 
 
@@ -500,6 +503,8 @@ ZZ.Concept = function(spec) { //spec needs an id
 
 
   self.regularURLs = function() {
+    if (!ZZ.cache.regularURLConcept.id) { return []; }
+
     var resp = self.textResponsesToConcept(ZZ.cache.regularURLConcept);
     ////console.log('resp',resp);
     var filtered = resp.select(function(u){
@@ -511,6 +516,8 @@ ZZ.Concept = function(spec) { //spec needs an id
 
 
   self.youtubeURLs = function() {
+    if (!ZZ.cache.youtubeURLConcept.id) { return []; }
+
     var resp = self.textResponsesToConcept(ZZ.cache.youtubeURLConcept);
     ////console.log('resp',resp);
     var filtered = resp.select(function(u){
@@ -521,6 +528,7 @@ ZZ.Concept = function(spec) { //spec needs an id
   };
   
   self.pdfURLs = function() {
+    if (!ZZ.cache.pdfURLConcept.id) { return []; }
     var resp = self.textResponsesToConcept(ZZ.cache.pdfURLConcept);
     ////console.log('resp',resp);
     var filtered = resp.select(function(u){
@@ -1154,6 +1162,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
   }
 
   function askZam(a,b,c) {
+    var x = 1;
     var r = jQuery.ajax({
       type: 'POST',
       url: ZZ.baseURL + '/ws',

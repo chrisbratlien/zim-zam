@@ -8,6 +8,10 @@ define('WILD',-1);
 
 define('APP_PATH',dirname(__FILE__));
 define('LIBRARY_DB_PATH',sprintf('%s/data/zz.db',APP_PATH));
+define('REMOTE_DB_PATH',sprintf('%s/data/remote.db',APP_PATH));
+
+
+
 /**
 define('LIBRARY_PATH',sprintf("%s/data/music/library",APP_PATH));
 define('INCOMING_PATH',sprintf("%s/data/music/incoming",APP_PATH));
@@ -1276,5 +1280,73 @@ function curl_get($url, array $get = array(), array $options = array())
 
 
 
+
+
+/*** REMOTE DB ****/
+
+function init_storage_db() {
+  $conn = new PDO(sprintf('sqlite:%s',REMOTE_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $conn->exec("CREATE TABLE IF NOT EXISTS remote " .
+      "(key TEXT PRIMARY KEY," .
+      " value TEXT)");
+}
+
+
+function remote_db_set($key,$value) {
+  init_storage_db();
+  remote_db_remove($key);
+  $conn = new PDO(sprintf('sqlite:%s',REMOTE_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  $q = $conn->prepare('INSERT INTO remote (key,value) VALUES(:key,:value)');
+  $q->execute(Array(
+          ':key'=>$key,
+          ':value'=>$value
+  ));
+}
+function remote_db_get($key) {
+  init_storage_db();
+  $conn = new PDO(sprintf('sqlite:%s',REMOTE_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  $q = $conn->prepare('SELECT value FROM remote WHERE key = :key');
+    $q->execute(Array(
+          ':key'=>$key
+    ));
+    $row = $q->fetchObject();
+  return $row->value;
+}
+
+function remote_db_remove($key) {
+  init_storage_db();
+  $conn = new PDO(sprintf('sqlite:%s',REMOTE_DB_PATH));
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  /////pp($conn,'conn');
+  try {
+    $q = $conn->prepare('DELETE FROM remote WHERE key = :key');
+    $q->execute(Array(
+        ':key' => $key
+    ));
+  } catch(PDOExecption $e) { 
+        ///$dbh->rollback(); 
+        print "Error!: " . $e->getMessage() . "</br>"; 
+  } 
+}
+
+add_action('ws_setItem',function($opts) {
+  $data = $opts['data'];
+  remote_db_set($data['key'],$data['value']);
+  exit;
+});
+add_action('ws_getItem',function($opts) {
+  $data = $opts['data'];
+  $value = remote_db_get($data['key']);
+  echo $value;
+  exit;
+});
+add_action('ws_removeItem',function($opts) {
+  $data = $opts['data'];
+  remote_db_remove($data['key']);
+  exit;
+});
 
 

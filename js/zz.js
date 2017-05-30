@@ -164,6 +164,8 @@ ZZ.Zam = function(spec) {
 
 
 
+ZZ.storage = BSD.Storage('local');
+  
 
 
 ZZ.cache = {};

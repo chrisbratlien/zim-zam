@@ -15,18 +15,9 @@
   <link href="<?php bloginfo('template_url'); ?>/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
   <link href="<?php bloginfo('template_url'); ?>/stylesheets/style.css" rel="stylesheet">
   
-  
+     	<link rel="apple-touch-icon" href="images/zimzam-white.png">
+  		<link rel="icon" type="image/png" href="images/zimzam-white.png">
 
-
-
-    	<link rel="apple-touch-icon" href="images/zimzam-white.png">
-      
-
-			<link rel="icon" type="image/png" href="images/zimzam-white.png">
-
-  
-  
-  
 
   <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
   <!--[if lt IE 9]>
@@ -41,6 +32,12 @@
   ================================================== -->
   <script src="//code.jquery.com/jquery-1.7.1.min.js"></script>
   <?php echo base_url_js(); ?>
+  <script type="text/javascript">
+    if (typeof ZZ == "undefined") { var ZZ = {}; }
+    ZZ.baseURL = '<?php bloginfo('url'); ?>';
+    if (typeof BSD == "undefined") { var BSD = {}; }
+    BSD.baseURL = '<?php bloginfo('url'); ?>';
+  </script>
   <script src="<?php bloginfo('template_url'); ?>/javascripts/array.js"></script>
   <script src="<?php bloginfo('template_url'); ?>/javascripts/string.supplant.js"></script>
   <script src="<?php bloginfo('template_url'); ?>/lib/bootstrap/js/bootstrap.js"></script>  
@@ -48,7 +45,10 @@
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.pubsub.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/eachify.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.storage.js"></script>  
+  <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.remotestorage.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.widgets.lightbox.js"></script>  
+  <script src="<?php bloginfo('template_url'); ?>/javascripts/zz.js"></script>
+  <script src="<?php bloginfo('template_url'); ?>/javascripts/bootup.js"></script>  
 
 
 
@@ -63,8 +63,6 @@
   if (typeof ZZ == "undefined") { var ZZ = {}; }
   ZZ.baseURL = '<?php bloginfo('url'); ?>';
   
-  
-  ZZ.storage = BSD.Storage('local');
   
   
   
@@ -95,7 +93,6 @@
   
   
  </script>
-  <script type="text/javascript" src="<?php bloginfo('template_url'); ?>/javascripts/zz.js"></script>
   <script type="text/javascript" src="<?php bloginfo('template_url'); ?>/javascripts/zz.widgets.trainer.js"></script>
 
   <?php wp_head(); ?>

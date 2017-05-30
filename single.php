@@ -63,6 +63,13 @@ BSD.Trio = function(spec) {
 		inner.append('&nbsp;');
 		inner.append(DOM.span(self.getResp()));
 		wrap.append(inner);
+
+		var controls = DOM.div().addClass('controls');
+		controls.append(DOM.span('+ C-C'));
+		controls.append(DOM.span('+ C-Text'));
+		wrap.append(controls);
+
+
 	};
 	return self;
 };

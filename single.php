@@ -2,7 +2,7 @@
 
 get_header(); ?>
 
-<button class="new-cct">New CCT</button>
+<button class="new-cct">New C-C(title)-T</button>
 <button class="new-ccc">New CCC</button>
 
 <div class="concepts">
@@ -113,10 +113,15 @@ BSD.remoteStorage.getItem('single',function(o) {
 	BSD.cct = combined.cct;
 
 	//bootstrap
+	var greatest = BSD.id;
+
+
 	BSD.cct = BSD.cct.map(function(o){	return BSD.CCT(o); });
 	BSD.cct.forEach(function(cct){
 		cct.renderOn(conceptsWrap);
+		greatest = Math.max(greatest,cct.recv);
 	});
+	BSD.id = greatest;
 
 });
 

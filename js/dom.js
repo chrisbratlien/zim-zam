@@ -16,7 +16,7 @@ DOM.element = function () {
         interface.append(children);
     }
     else {
-        children.each(function (child) {
+        children.forEach(function (child) {
             interface.append(child);
         });
     }

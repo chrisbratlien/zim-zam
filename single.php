@@ -21,6 +21,7 @@ BSD.id = 0;
 
 BSD.constants = {};
 BSD.constants.TITLE = 1;
+BSD.constants.IMAGEURL = 2;
 
 
 BSD.Asset = function(spec) {
@@ -35,6 +36,7 @@ BSD.Trio = function(spec) {
 
 	self.recv = spec[0];
 	self.msg = spec[1];
+	self.mesg = spec[1];
 	self.resp = spec[2];
 
 
@@ -64,11 +66,12 @@ BSD.Trio = function(spec) {
 		inner.append(DOM.span(self.getResp()));
 		wrap.append(inner);
 
+		/**
 		var controls = DOM.div().addClass('controls');
 		controls.append(DOM.span('+ C-C'));
 		controls.append(DOM.span('+ C-Text'));
 		wrap.append(controls);
-
+		**/
 
 	};
 	return self;
@@ -98,12 +101,48 @@ BSD.CCC = function(spec) {
 
 var conceptsWrap = jQuery('.concepts');
 
+BSD.C = function(spec) {
+	var self = BSD.PubSub({});
+
+	var ccc = [];
+	var cct = [];
+
+	ccc = BSD.ccc.select(function(o){
+		return o.recv == spec;
+	});
+	cct = BSD.cct.select(function(o){
+		return o.recv == spec;
+	});
+
+
+	self.renderOn = function(wrap) {
+		wrap.append('Name: ' + self.name());
+	};
+
+	self.name = function() {
+		var hit = cct.detect(function(o){
+			return o.msg == BSD.constants.TITLE;
+		});
+		return hit.resp;
+	};
+	self.imageURL = function() {
+		var hit = cct.detect(function(o){
+			return o.msg == BSD.constants.IMAGEURL;
+		});
+		return hit.resp;
+	};
+
+
+	return self;
+}
+
 
 
 BSD.assets = [];
 
 BSD.cct = [];
 BSD.ccc = [];
+BSD.c = [];
 
 ///base data...FIXME: don't use same container for specs.
 BSD.id = 0;
@@ -129,6 +168,12 @@ BSD.remoteStorage.getItem('single',function(o) {
 		greatest = Math.max(greatest,cct.recv);
 	});
 	BSD.id = greatest;
+
+	for (var i = 1; i <= BSD.id; i+=1) {
+		var c = BSD.C(i);
+		c.renderOn(conceptsWrap);
+		BSD.c.push(c);
+	}
 
 });
 

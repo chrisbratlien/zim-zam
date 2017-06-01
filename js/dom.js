@@ -15,8 +15,8 @@ DOM.element = function () {
     else if (typeof children == "object") { //probably another jquery object
         interface.append(children);
     }
-    else {
-        children.forEach(function (child) {
+    else if (children && typeof children.length != "undefined") {
+        children.each(function (child) {
             interface.append(child);
         });
     }
@@ -27,7 +27,7 @@ DOM.li = function () {
     if (arguments.length == 0) { return DOM.element('li'); }
     return DOM.element('li', arguments[0]);
 };
- 'html,head,script,link,body,div,ul,ol,li,a,p,strong,br,span,img,table,thead,tbody,tr,th,td,h1,h2,h3,h4,h5,h6,select,option,label,input,textarea,button,iframe,audio,object,video,canvas,'.split(/,/).each(function (tag) {
+ 'html,head,script,style,link,body,div,ul,ol,li,a,i,p,strong,sup,sub,br,span,img,table,thead,tbody,tr,th,td,h1,h2,h3,h4,h5,h6,select,option,label,input,textarea,button,iframe,audio,object,video,canvas,form,fieldset,legend,'.split(/,/).forEach(function (tag) {
     DOM[tag] = function () {
         if (arguments.length == 0) { return DOM.element(tag); }
         return DOM.element(tag, arguments[0]);

@@ -2,8 +2,18 @@
 
 get_header(); ?>
 
-<button class="new-cct">New C-C(title)-T</button>
-<button class="new-ccc">New CCC</button>
+<style>
+
+	.thumb { 
+
+		width: 30px; 
+
+	}
+</style>
+
+
+<button class="btn btn-new-cct">New Concept</button>
+<button class="btn btn-save">Save</button>
 
 <div class="concepts">
 	
@@ -116,7 +126,35 @@ BSD.C = function(spec) {
 
 
 	self.renderOn = function(wrap) {
-		wrap.append('Name: ' + self.name());
+		wrap.append(DOM.div(self.name()));
+
+		var imageURL = self.imageURL(); 
+		var thumb = DOM.img().addClass('thumb').attr('src',imageURL || BSD.baseURL + '/images/zimzam-white.png');
+		wrap.append(thumb);
+
+		if (!imageURL) {
+			var imageInput = DOM.input();
+			imageInput.change(function(){
+				console.log(this.value);
+				var o = BSD.CCT([spec,BSD.constants.IMAGEURL,this.value]);
+				BSD.cct.push(o);
+
+				//FIXME: what about using fetch?
+				jQuery.ajax({
+					url: BSD.baseURL + '/ws',
+					data: {
+						action: 'get_glyph_from_url',
+						url: this.value
+					},
+					success: function(o){
+						console.log('o?',o);
+						thumb.attr('src', BSD.baseURL + '/uploads/' + o);
+						imageInput.remove();///replaceWith(thumb);
+					}
+				});
+			});
+			wrap.append(imageInput);
+		}
 	};
 
 	self.name = function() {
@@ -129,6 +167,7 @@ BSD.C = function(spec) {
 		var hit = cct.detect(function(o){
 			return o.msg == BSD.constants.IMAGEURL;
 		});
+		if (!hit) { return false; }
 		return hit.resp;
 	};
 
@@ -164,7 +203,7 @@ BSD.remoteStorage.getItem('single',function(o) {
 
 	BSD.cct = BSD.cct.map(function(o){	return BSD.CCT(o); });
 	BSD.cct.forEach(function(cct){
-		cct.renderOn(conceptsWrap);
+		///cct.renderOn(conceptsWrap);
 		greatest = Math.max(greatest,cct.recv);
 	});
 	BSD.id = greatest;
@@ -180,8 +219,9 @@ BSD.remoteStorage.getItem('single',function(o) {
 
 
 
-jQuery('.new-cct').click(function(){
+jQuery('.btn-new-cct').click(function(){
 	var name = prompt('concept name');
+	if (!name) { return false; }
 	BSD.id += 1;
 	var assetSpec = { id: BSD.id, name: name };
 	var asset = BSD.Asset(assetSpec);
@@ -190,7 +230,10 @@ jQuery('.new-cct').click(function(){
 	var cctSpec = [BSD.id,1,name];
 	var cct = BSD.CCT(cctSpec);
 	BSD.cct.push(cct);
-	cct.renderOn(conceptsWrap);
+	var c = BSD.C(BSD.id);
+	c.renderOn(conceptsWrap);
+	BSD.c.push(c);
+	//cct.renderOn(conceptsWrap);
 });
 
 
@@ -212,6 +255,10 @@ campfire.subscribe('save-zz',function(){
 		cct: cct
 	};
 	BSD.remoteStorage.setItem('single',JSON.stringify(combined));
+});
+
+jQuery('.btn-save').click(function(){
+	campfire.publish('save-zz');
 });
 
 

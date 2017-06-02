@@ -176,6 +176,39 @@ BSD.C = function(spec) {
 }
 
 
+BSD.rat = function(spec,y) {
+	var self = {};
+
+	if (y) {
+		spec = { x: spec, y: y }
+	}
+	self.spec = spec;
+
+
+
+	self.area = function() {
+		return spec.x * spec.y;
+	};
+
+
+	self.evolve = function(other) {
+		var result = BSD.rat({
+			x: spec.x + other.spec.x,
+			y: (self.area() + other.area()) / (spec.x + other.spec.x)
+		});
+		return result;
+	};
+
+	self.toString = function() {
+		return spec.x + ' @ ' + spec.y;
+	}
+
+
+	return self;
+}
+
+
+
 
 BSD.assets = [];
 
@@ -260,6 +293,14 @@ campfire.subscribe('save-zz',function(){
 jQuery('.btn-save').click(function(){
 	campfire.publish('save-zz');
 });
+
+
+////accum = [[2,270],[1,290],[1,305],[2,315],[1,310]].inject(BSD.rat(0,1),function(accum,o) { return accum.evolve(BSD.rat(o[0],o[1])); })
+
+function evolveTrx(them) {
+	var result = them.inject(BSD.rat(0,1),function(accum,o) { return accum.evolve(BSD.rat(o[0],o[1])); });
+	return result;
+}
 
 
 </script>

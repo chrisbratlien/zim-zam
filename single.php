@@ -199,6 +199,12 @@ BSD.rat = function(spec,y) {
 		return result;
 	};
 
+	self.fifo = function(x) {
+
+	}
+
+
+
 	self.toString = function() {
 		return spec.x + ' @ ' + spec.y;
 	}
@@ -301,6 +307,109 @@ function evolveTrx(them) {
 	var result = them.inject(BSD.rat(0,1),function(accum,o) { return accum.evolve(BSD.rat(o[0],o[1])); });
 	return result;
 }
+
+function only(them,x) {
+	var accum = 0;
+	var result = them.map(function(pair){
+		var px = pair[0];
+		accum += px;
+		var diff = accum - x;
+		if (diff > 0) {
+			accum = x;
+			return [px-diff,pair[1]];
+		}
+		return [px,pair[1]];
+	});
+	return result;
+}
+
+function fifo(them,x) {
+	return evolveTrx(only(them,x));
+	///var justx = them.map(function())
+}
+
+
+//Coinbase
+/**
+
+x = [];
+jQuery('.tx-amount').each(function(i,e) { var shares = jQuery(e).find('.positive').text(); var usd = jQuery(e).find('.transfer').text(); x.push([shares,usd]) })
+
+jQuery('.tx-item').each(function(i,e) { var shares = jQuery(e).find('.positive').text().trim().split(/\ /)[0]; var usd = jQuery(e).find('.transfer').text().trim().split(/\ /)[0].replace(/\$/,''); var usdps = usd/shares; x.push([parseFloat(shares),usdps]); })
+
+BTC =
+[
+    [
+        0.00431868,
+        1204.0716144747933
+    ],
+    [
+        0.00401531,
+        1295.0432220675364
+    ],
+    [
+        0.03571518,
+        1164.7708341383131
+    ],
+    [
+        0.12111015,
+        1257.0374985085891
+    ],
+    [
+        0.04209536,
+        1205.3585003192752
+    ],
+    [
+        0.04757334,
+        1066.5637518828823
+    ],
+    [
+        0.08358533,
+        1244.1178374243423
+    ],
+    [
+        0.07940607,
+        1244.1114388358474
+    ]
+]"
+
+
+
+"0.41781942 @ 1217.0329469128073"
+
+
+ETH =
+
+[
+    [
+        0.30447518,
+        17.078567783423267
+    ],
+    [
+        2.08564508,
+        18.94857393473678
+    ],
+    [
+        1.10215427,
+        46.03711239080896
+    ],
+    [
+        1.10226454,
+        46.032506860830345
+    ],
+    [
+        2.19898107,
+        47.290084220688634
+    ],
+    [
+        1.85412151,
+        164.21253858383858
+    ]
+]
+"8.64764165 @ 64.14003059435287"
+**/
+
+
 
 
 </script>

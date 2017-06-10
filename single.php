@@ -33,6 +33,8 @@ get_header(); ?>
 <?php
 add_action('wp_footer',function(){
 ?>
+
+<!--<script src="https://cloud.tinymce.com/stable/tinymce.min.js?apiKey=mukkqxrd91gce8y7kazftgi8aer53cv6hqf0wdisgyhc9dp1"></script>-->
 <script src="https://cloud.tinymce.com/stable/tinymce.min.js"></script>
 <script type="text/javascript">
 
@@ -374,7 +376,8 @@ campfire.subscribe('save-from-editor',function(){
 	var text = wrap.text();
 
 	text = text.replace(/\?|\"/g,'');
-
+	text = text.replace(/\r|\n/,' ');
+	console.log('text is',text);
 	var words = text.split(/\ +/);
 	words.forEach(function(word) {
 		campfire.publish('maybe-conceptify',word);

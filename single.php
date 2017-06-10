@@ -191,6 +191,32 @@ BSD.C = function(spec) {
 }
 
 
+BSD.CandC = function(name) {
+	var self = BSD.PubSub({});
+	self.renderOn = function(wrap) {
+		var inner = DOM.div();
+		var ok = DOM.button('OK').addClass('btn btn-primary');
+		var cancel = DOM.button('x').addClass('btn btn-cancel');
+		var grp = DOM.div().addClass('btn-group');
+		grp.append(ok);
+		grp.append(cancel);
+		inner.append(DOM.span(name));
+		inner.append(grp);
+		wrap.append(inner);
+
+		ok.click(function(){
+			self.publish('save');
+		});
+		cancel.click(function(){
+			//wrap.remove(inner);
+			inner.remove();
+		});
+
+	}
+	return self;
+};
+
+
 BSD.rat = function(spec,y) {
 	var self = {};
 
@@ -323,7 +349,9 @@ campfire.subscribe('maybe-conceptify',function(word){
 	if (already[name]) { return false; }
 	already[name] = true;
 
-
+	var cand = BSD.CandC(word);
+	cand.renderOn(candidatesWrap);
+	/***
 	BSD.id += 1;
 	var assetSpec = { id: BSD.id, name: name };
 	var asset = BSD.Asset(assetSpec);
@@ -335,6 +363,7 @@ campfire.subscribe('maybe-conceptify',function(word){
 	var c = BSD.C(BSD.id);
 	c.renderOn(candidatesWrap);
 	BSD.c.push(c);
+	***/
 });
 
 campfire.subscribe('save-from-editor',function(){

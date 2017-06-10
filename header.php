@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-  <!-- Le styles -->
-  <link href="<?php bloginfo('template_url'); ?>/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
   <style type="text/css">
     body {
     padding-top: 60px;
@@ -12,7 +10,11 @@
     padding: 9px 0;
     }
   </style>
-  <link href="<?php bloginfo('template_url'); ?>/lib/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+
   <link href="<?php bloginfo('template_url'); ?>/stylesheets/style.css" rel="stylesheet">
   
      	<link rel="apple-touch-icon" href="images/zimzam-white.png">
@@ -43,7 +45,7 @@
   <script src="<?php bloginfo('template_url'); ?>/lib/bootstrap/js/bootstrap.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/dom.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.pubsub.js"></script>  
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/eachify.js"></script>  
+  <script src="<?php bloginfo('template_url'); ?>/javascripts/eachify.js"></script><script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.widgets.procrastinator.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.storage.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.remotestorage.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.widgets.lightbox.js"></script>  

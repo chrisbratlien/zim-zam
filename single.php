@@ -9,23 +9,37 @@ get_header(); ?>
 		width: 30px; 
 
 	}
+
+	textarea { height: 400px; }
 </style>
 
 
 <button class="btn btn-new-cct">New Concept</button>
 <button class="btn btn-save">Save</button>
-
-<div class="concepts">
-	
-
-</div>
+<div class="row">
+	<div class="col-md-3 col-xs-3">
+		<div class="concepts">
+		</div>
+	</div>
+	<div class="col-md-3 col-xs-3">
+		<div class="candidates">
+		</div>
+	</div>
+	<div class="col-md-6 col-xs-6">
+		<textarea class="notes"></textarea>
+	</div>
+</div><!-- row -->
 
 <?php
 add_action('wp_footer',function(){
 ?>
+<script src="https://cloud.tinymce.com/stable/tinymce.min.js"></script>
 <script type="text/javascript">
 
-
+var myEditor = false; 
+var waiter = BSD.Widgets.Procrastinator({ timeout: 400 });
+var waiter2s = BSD.Widgets.Procrastinator({ timeout: 2000 });
+  
 
 BSD.id = 0;
 
@@ -110,6 +124,7 @@ BSD.CCC = function(spec) {
 };
 
 var conceptsWrap = jQuery('.concepts');
+var candidatesWrap = jQuery('.candidates');
 
 BSD.C = function(spec) {
 	var self = BSD.PubSub({});
@@ -301,6 +316,44 @@ jQuery('.btn-save').click(function(){
 });
 
 
+var already = {};
+
+campfire.subscribe('maybe-conceptify',function(word){
+	var name = word;
+	if (already[name]) { return false; }
+	already[name] = true;
+
+
+	BSD.id += 1;
+	var assetSpec = { id: BSD.id, name: name };
+	var asset = BSD.Asset(assetSpec);
+	BSD.assets.push(asset);
+
+	var cctSpec = [BSD.id,1,name];
+	var cct = BSD.CCT(cctSpec);
+	BSD.cct.push(cct);
+	var c = BSD.C(BSD.id);
+	c.renderOn(candidatesWrap);
+	BSD.c.push(c);
+});
+
+campfire.subscribe('save-from-editor',function(){
+	//console.log("PONG");
+	var content = myEditor.getContent();
+
+	var wrap = DOM.div(content);
+	var text = wrap.text();
+
+	text = text.replace(/\?|\"/g,'');
+
+	var words = text.split(/\ +/);
+	words.forEach(function(word) {
+		campfire.publish('maybe-conceptify',word);
+	});
+});
+
+
+
 ////accum = [[2,270],[1,290],[1,305],[2,315],[1,310]].inject(BSD.rat(0,1),function(accum,o) { return accum.evolve(BSD.rat(o[0],o[1])); })
 
 function evolveTrx(them) {
@@ -327,6 +380,8 @@ function fifo(them,x) {
 	return evolveTrx(only(them,x));
 	///var justx = them.map(function())
 }
+
+
 
 
 //Coinbase
@@ -409,7 +464,19 @@ ETH =
 "8.64764165 @ 64.14003059435287"
 **/
 
-
+	tinymce.init({ 
+		selector:'textarea',
+		init_instance_callback: function (editor) {
+			myEditor = editor;
+    	editor.on('click', function (e) {
+      	console.log('Element clicked:', e.target.nodeName);
+    	});
+			editor.on('keyup',function(e) {
+				///console.log('keyup',e);
+				waiter2s.beg(campfire,'save-from-editor');		
+			});
+  	}
+	});
 
 
 </script>

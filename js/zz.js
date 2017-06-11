@@ -43,6 +43,12 @@ ZZ.keycodes = {
 ZZ.zamForConceptPrefix = 'ZAM-FOR-CONCEPT-';
 ZZ.zimForConceptPrefix = 'ZIM-FOR-CONCEPT-';
 
+ZZ.fixProtocol = function(url) {
+        //returns a URL which matches whatever the browser window/tab's current protocol is, http or https.
+        var result = url;
+        result = result.replace(/^https*:/i,window.location.protocol); //the asterisk matches 'zero or more of s', so this will match both 'http:' and 'https:' and convertthem into whatever it needs to be.
+        return result;
+      };
 
 
 
@@ -521,7 +527,9 @@ ZZ.Concept = function(spec) { //spec needs an id
     ////console.log('resp',resp);
     var filtered = resp.select(function(u){
       return u.length > 0;
-    });
+    }).map(function(u){
+			return ZZ.fixProtocol(u);
+		});
       
     return filtered;
   };
@@ -532,7 +540,9 @@ ZZ.Concept = function(spec) { //spec needs an id
     ////console.log('resp',resp);
     var filtered = resp.select(function(u){
       return u.length > 0;
-    });
+    }).map(function(u){
+			return ZZ.fixProtocol(u);
+		});
       
     return filtered;
   };
@@ -775,9 +785,11 @@ ZZ.youtubeEmbed = function(url) {
   iframe.attr('height',315);
   iframe.attr('frameborder',0); 
   iframe.attr('allowfullscreen',true); 
-  iframe.attr('src','http://www.youtube.com/embed/{id}?wmode=transparent'.supplant({ id: ZZ.getVars(url).v }));  
+  var tmp = 'http://www.youtube.com/embed/{id}?wmode=transparent'.supplant({ id: ZZ.getVars(url).v });
+  tmp = ZZ.fixProtocol(tmp);  
+  iframe.attr('src',tmp);
   return iframe;
-}
+};
 
 
 

@@ -131,6 +131,8 @@ var candidatesWrap = jQuery('.candidates');
 BSD.C = function(spec) {
 	var self = BSD.PubSub({});
 
+	self.spec = spec;
+
 	var ccc = [];
 	var cct = [];
 
@@ -194,9 +196,9 @@ BSD.C = function(spec) {
 
 
 BSD.CandC = function(name) {
+	var inner = DOM.div();
 	var self = BSD.PubSub({});
 	self.renderOn = function(wrap) {
-		var inner = DOM.div();
 		var ok = DOM.button('OK').addClass('btn btn-primary');
 		var cancel = DOM.button('x').addClass('btn btn-cancel');
 		var grp = DOM.div().addClass('btn-group');
@@ -211,9 +213,12 @@ BSD.CandC = function(name) {
 		});
 		cancel.click(function(){
 			//wrap.remove(inner);
-			inner.remove();
+			self.destroy();	
 		});
 
+	}
+	self.destroy = function() {
+		inner.remove();
 	}
 	return self;
 };
@@ -292,7 +297,7 @@ BSD.remoteStorage.getItem('single',function(o) {
 
 	for (var i = 1; i <= BSD.id; i+=1) {
 		var c = BSD.C(i);
-		c.renderOn(conceptsWrap);
+		////c.renderOn(conceptsWrap);
 		BSD.c.push(c);
 	}
 
@@ -304,6 +309,12 @@ BSD.remoteStorage.getItem('single',function(o) {
 jQuery('.btn-new-cct').click(function(){
 	var name = prompt('concept name');
 	if (!name) { return false; }
+	campfire.publish('new-cct',name);
+	//cct.renderOn(conceptsWrap);
+});
+
+
+campfire.subscribe('new-cct',function(name){
 	BSD.id += 1;
 	var assetSpec = { id: BSD.id, name: name };
 	var asset = BSD.Asset(assetSpec);
@@ -315,10 +326,36 @@ jQuery('.btn-new-cct').click(function(){
 	var c = BSD.C(BSD.id);
 	c.renderOn(conceptsWrap);
 	BSD.c.push(c);
-	//cct.renderOn(conceptsWrap);
 });
 
 
+
+function lookupCCT(text) {
+	var result = BSD.cct.detect(function(cct){ 
+		return cct.resp.toLowerCase() == text.toLowerCase(); 
+	});
+	return result;
+}
+
+function lookupC(text,success,error) {
+	var cct = lookupCCT(text);
+	if (!cct) { 
+		error(text);
+		return false;
+	}
+
+	var hit = BSD.c.detect(function(c){ 
+		return c.spec == cct.recv;
+	});
+	if (hit) {
+		success(hit);
+		return false;
+	}
+	error(text);
+}
+
+
+/***
 jQuery('.new-ccc').click(function(){
 
 	var cctSpec = [BSD.id,1,name];
@@ -326,6 +363,7 @@ jQuery('.new-ccc').click(function(){
 	BSD.cct.push(cct);
 	cct.renderOn(conceptsWrap);
 });
+***/
 
 
 
@@ -347,12 +385,19 @@ jQuery('.btn-save').click(function(){
 var already = {};
 
 campfire.subscribe('maybe-conceptify',function(word){
-	var name = word;
-	if (already[name]) { return false; }
-	already[name] = true;
 
-	var cand = BSD.CandC(word);
-	cand.renderOn(candidatesWrap);
+	lookupC(word,function(c){
+		c.renderOn(conceptsWrap);
+	},function(w){
+		var name = word;
+		var cand = BSD.CandC(word);
+		cand.subscribe('save',function(){
+			campfire.publish('new-cct',word);
+			cand.destroy();
+		});
+		cand.renderOn(candidatesWrap);
+	});
+
 	/***
 	BSD.id += 1;
 	var assetSpec = { id: BSD.id, name: name };
@@ -380,6 +425,8 @@ campfire.subscribe('save-from-editor',function(){
 	console.log('text is',text);
 	var words = text.split(/\ +/);
 	words.forEach(function(word) {
+		if (already[word]) { return false; }
+		already[word] = true;
 		campfire.publish('maybe-conceptify',word);
 	});
 });

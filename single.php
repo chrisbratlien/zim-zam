@@ -11,11 +11,39 @@ get_header(); ?>
 	}
 
 	textarea { height: 400px; }
+
+
+	.drop {
+		background: #0f0;
+		border: 1px solid #0a0;
+		min-height: 10px;
+		min-width: 10px;
+	}
+
+.inner .drop {
+		height: 100px;
+		width: 100px;
+
+}
+
 </style>
 
 
-<button class="btn btn-new-cct">New Concept</button>
-<button class="btn btn-save">Save</button>
+<button class="btn btn-primary btn-sm btn-new-cct">New Concept</button>
+<button class="btn btn-primary btn-sm btn-save">Save</button>
+
+<div class="row">
+	<div class="col-md-3 col-xs-3 new-recv drop">
+	</div>
+	<div class="col-md-3 col-xs-3 new-msg drop">
+	</div>
+	<div class="col-md-3 col-xs-3 new-resp drop">
+	</div>
+	<div class="col-md-3 col-xs-3 new-save">
+	<button class="btn btn-primary btn-sm btn-save-trio">Save Trio</button>
+	</div>
+</div><!-- row -->
+
 <div class="row">
 	<div class="col-md-3 col-xs-3">
 		<div class="concepts">
@@ -128,6 +156,21 @@ BSD.CCC = function(spec) {
 var conceptsWrap = jQuery('.concepts');
 var candidatesWrap = jQuery('.candidates');
 
+
+BSD.Widgets.Discover = function(spec) {
+	var textInput = DOM.input().attr('type','text');
+	var drag = DOM.div().addClass('drag-target');
+	var results = DOM.div().addClass('results');
+
+	var self = BSD.PubSub({});
+	self.renderOn = function(wrap) {
+
+
+	};
+	return self;
+};
+
+
 BSD.C = function(spec) {
 	var self = BSD.PubSub({});
 
@@ -143,13 +186,26 @@ BSD.C = function(spec) {
 		return o.recv == spec;
 	});
 
+	var inner = DOM.div().addClass('inner').attr('draggable',true); 
+
+
+	inner.on('dragstart',function(evt){
+		evt.originalEvent.dataTransfer.setData('text',spec);
+	});
+
+
+	var panel = DOM.div().addClass('link-panel');
+	var messageDrop = DOM.div().addClass('drop msg-drop');
+	var responseDrop = DOM.div().addClass('drop recv-drop');
+	panel.append(messageDrop);
+	panel.append(responseDrop);
 
 	self.renderOn = function(wrap) {
-		wrap.append(DOM.div(self.name()));
+		inner.append(DOM.div(self.name()));
 
 		var imageURL = self.imageURL(); 
 		var thumb = DOM.img().addClass('thumb').attr('src',imageURL || BSD.baseURL + '/images/zimzam-white.png');
-		wrap.append(thumb);
+		inner.append(thumb);
 
 		if (!imageURL) {
 			var imageInput = DOM.input();
@@ -172,8 +228,17 @@ BSD.C = function(spec) {
 					}
 				});
 			});
-			wrap.append(imageInput);
+			inner.append(imageInput);
 		}
+
+		var plus = DOM.i().addClass("fa fa-plus");
+		plus.on('click',function(){
+		});
+		inner.append(plus);
+		//inner.append(panel);
+
+		wrap.append(inner);
+
 	};
 
 	self.name = function() {
@@ -199,12 +264,13 @@ BSD.CandC = function(name) {
 	var inner = DOM.div();
 	var self = BSD.PubSub({});
 	self.renderOn = function(wrap) {
-		var ok = DOM.button('OK').addClass('btn btn-primary');
-		var cancel = DOM.button('x').addClass('btn btn-cancel');
+		var ok = DOM.button('OK').addClass('btn btn-primary btn-sm');
+		var cancel = DOM.button('x').addClass('btn btn-cancel btn-sm');
 		var grp = DOM.div().addClass('btn-group');
 		grp.append(ok);
 		grp.append(cancel);
 		inner.append(DOM.span(name));
+		inner.append('&nbsp;');
 		inner.append(grp);
 		wrap.append(inner);
 
@@ -293,6 +359,13 @@ BSD.remoteStorage.getItem('single',function(o) {
 		///cct.renderOn(conceptsWrap);
 		greatest = Math.max(greatest,cct.recv);
 	});
+	BSD.ccc = BSD.ccc.map(function(o){	return BSD.CCC(o); });
+	BSD.ccc.forEach(function(ccc){
+		///cct.renderOn(conceptsWrap);
+		greatest = Math.max(greatest,ccc.recv);
+	});
+
+
 	BSD.id = greatest;
 
 	for (var i = 1; i <= BSD.id; i+=1) {
@@ -327,6 +400,17 @@ campfire.subscribe('new-cct',function(name){
 	c.renderOn(conceptsWrap);
 	BSD.c.push(c);
 });
+
+
+campfire.subscribe('new-ccc',function(spec){
+	var ccc = BSD.CCC(spec);
+	BSD.ccc.push(ccc);
+});
+
+
+
+
+
 
 
 
@@ -416,12 +500,20 @@ campfire.subscribe('maybe-conceptify',function(word){
 campfire.subscribe('save-from-editor',function(){
 	//console.log("PONG");
 	var content = myEditor.getContent();
-
+	console.log(content,'content');
 	var wrap = DOM.div(content);
 	var text = wrap.text();
 
 	text = text.replace(/\?|\"/g,'');
-	text = text.replace(/\r|\n/,' ');
+
+	lines = text.split(/\r|\n/);
+	lines.forEach(function(line){
+		if (already[line]) { return false; }
+		already[line] = true;
+		campfire.publish('maybe-conceptify',line);
+	});
+
+	text = text.replace(/\r|\n/g,' ');
 	console.log('text is',text);
 	var words = text.split(/\ +/);
 	words.forEach(function(word) {
@@ -556,6 +648,62 @@ ETH =
 			});
   	}
 	});
+
+
+	var newSpec = []
+
+
+
+var recvDrop = jQuery('.new-recv.drop');
+var msgDrop = jQuery('.new-msg.drop');
+var respDrop = jQuery('.new-resp.drop');
+
+	jQuery('.drop').on('dragover',function(evt){
+		evt.preventDefault();
+		var id = evt.originalEvent.dataTransfer.getData('text');
+		console.log('ID',id);
+	});
+
+	recvDrop.on('drop',function(evt){
+			var id = evt.originalEvent.dataTransfer.getData('text');
+			var c = BSD.C(id);
+			recvDrop.empty();
+			c.renderOn(recvDrop);
+			newSpec[0] = parseInt(id,10);
+	});
+	msgDrop.on('drop',function(evt){
+			var id = evt.originalEvent.dataTransfer.getData('text');
+			var c = BSD.C(id);
+			msgDrop.empty();
+			c.renderOn(msgDrop);
+			newSpec[1] = parseInt(id,10);
+	});
+	respDrop.on('drop',function(evt){
+			var id = evt.originalEvent.dataTransfer.getData('text');
+			var c = BSD.C(id);
+			respDrop.empty();
+			c.renderOn(respDrop);
+			newSpec[2] = parseInt(id,10);
+	});
+
+	jQuery('.new-recv.drop').on('drop',function(evt){
+		//evt.preventDefault();
+	});
+
+	jQuery('.btn-save-trio').click(function(){
+		if (! (newSpec[0] && newSpec[1] && newSpec[2])) { 
+			console.log('incomplete');
+			return false;
+		}
+		if (typeof newSpec[2] == "string") {
+			campfire.publish('new-cct',newSpec);
+		}
+		else {
+			campfire.publish('new-ccc',newSpec);
+		}
+	});
+
+
 
 
 </script>

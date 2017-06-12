@@ -12,8 +12,16 @@
   </style>
 
 
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+  <!-- bootstrap 3-->
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">  
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
 
+
+
+
+<link rel="stylesheet" href="lib/font-awesome-4.7.0/css/font-awesome.min.css">
 
   <link href="<?php bloginfo('template_url'); ?>/stylesheets/style.css" rel="stylesheet">
   
@@ -32,7 +40,6 @@
   <meta name="author" content="">
   <!-- JS
   ================================================== -->
-  <script src="//code.jquery.com/jquery-1.7.1.min.js"></script>
   <?php echo base_url_js(); ?>
   <script type="text/javascript">
     if (typeof ZZ == "undefined") { var ZZ = {}; }
@@ -40,17 +47,9 @@
     if (typeof BSD == "undefined") { var BSD = {}; }
     BSD.baseURL = '<?php bloginfo('url'); ?>';
   </script>
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/array.js"></script>
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/string.supplant.js"></script>
-  <script src="<?php bloginfo('template_url'); ?>/lib/bootstrap/js/bootstrap.js"></script>  
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/dom.js"></script>  
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.pubsub.js"></script>  
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/eachify.js"></script><script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.widgets.procrastinator.js"></script>  
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.storage.js"></script>  
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.remotestorage.js"></script>  
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.widgets.lightbox.js"></script>  
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/zz.js"></script>
-  <script src="<?php bloginfo('template_url'); ?>/javascripts/bootup.js"></script>  
+
+
+
 
 
 

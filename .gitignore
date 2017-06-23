@@ -2,6 +2,10 @@
 schema.txt
 local.php
 uploads/*
-data
 data/zz.db
 .DS_Store
+data/cacert.pem
+data/cblog.txt
+data/old
+data/remote.db
+node_modules

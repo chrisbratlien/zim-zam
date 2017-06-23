@@ -55,7 +55,6 @@
 
 
    <link rel="stylesheet" href="<?php bloginfo('template_url'); ?>/stylesheets/placeholder_polyfill.css">
-   <script src="<?php bloginfo('template_url'); ?>/javascripts/placeholder_polyfill.jquery.js" charset="utf-8"></script>
   
   
 
@@ -94,7 +93,6 @@
   
   
  </script>
-  <script type="text/javascript" src="<?php bloginfo('template_url'); ?>/javascripts/zz.widgets.trainer.js"></script>
 
   <?php wp_head(); ?>
 </head>

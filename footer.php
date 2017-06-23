@@ -22,10 +22,9 @@
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.remotestorage.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bsd.widgets.lightbox.js"></script>  
   <script src="<?php bloginfo('template_url'); ?>/javascripts/zz.js"></script>
+  <script src="<?php bloginfo('template_url'); ?>/javascripts/zz.widgets.trainer.js"></script>
   <script src="<?php bloginfo('template_url'); ?>/javascripts/bootup.js"></script>  
-
-
-
+  <script src="<?php bloginfo('template_url'); ?>/javascripts/placeholder_polyfill.jquery.js" charset="utf-8"></script>
 
 
 <?php wp_footer(); ?>

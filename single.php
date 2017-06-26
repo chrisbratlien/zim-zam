@@ -32,17 +32,21 @@ get_header(); ?>
 <button class="btn btn-primary btn-sm btn-new-cct">New Concept</button>
 <button class="btn btn-primary btn-sm btn-save">Save</button>
 
+<!--
 <div class="row">
 	<div class="col-md-3 col-xs-3 new-recv drop">
 	</div>
 	<div class="col-md-3 col-xs-3 new-msg drop">
 	</div>
 	<div class="col-md-3 col-xs-3 new-resp drop">
+		<input class="new-resp-text">
 	</div>
 	<div class="col-md-3 col-xs-3 new-save">
 	<button class="btn btn-primary btn-sm btn-save-trio">Save Trio</button>
 	</div>
-</div><!-- row -->
+</div>
+-->
+<!-- row -->
 
 <div class="row">
 	<div class="col-md-3 col-xs-3">
@@ -57,6 +61,13 @@ get_header(); ?>
 		<textarea class="notes"></textarea>
 	</div>
 </div><!-- row -->
+
+
+
+<div class="row trifecta">
+</div>
+
+
 
 <?php
 add_action('wp_footer',function(){
@@ -298,13 +309,9 @@ BSD.rat = function(spec,y) {
 	}
 	self.spec = spec;
 
-
-
 	self.area = function() {
 		return spec.x * spec.y;
 	};
-
-
 	self.evolve = function(other) {
 		var result = BSD.rat({
 			x: spec.x + other.spec.x,
@@ -312,23 +319,13 @@ BSD.rat = function(spec,y) {
 		});
 		return result;
 	};
-
 	self.fifo = function(x) {
-
 	}
-
-
-
 	self.toString = function() {
 		return spec.x + ' @ ' + spec.y;
 	}
-
-
 	return self;
 }
-
-
-
 
 BSD.assets = [];
 
@@ -352,7 +349,6 @@ BSD.remoteStorage.getItem('single',function(o) {
 
 	//bootstrap
 	var greatest = BSD.id;
-
 
 	BSD.cct = BSD.cct.map(function(o){	return BSD.CCT(o); });
 	BSD.cct.forEach(function(cct){
@@ -382,12 +378,12 @@ BSD.remoteStorage.getItem('single',function(o) {
 jQuery('.btn-new-cct').click(function(){
 	var name = prompt('concept name');
 	if (!name) { return false; }
-	campfire.publish('new-cct',name);
+	campfire.publish('new-cct-name',name);
 	//cct.renderOn(conceptsWrap);
 });
 
 
-campfire.subscribe('new-cct',function(name){
+campfire.subscribe('new-cct-name',function(name){
 	BSD.id += 1;
 	var assetSpec = { id: BSD.id, name: name };
 	var asset = BSD.Asset(assetSpec);
@@ -402,16 +398,16 @@ campfire.subscribe('new-cct',function(name){
 });
 
 
+campfire.subscribe('new-cct',function(spec){
+	var cct = BSD.CCT(spec);
+	BSD.cct.push(cct);
+});
+
+
 campfire.subscribe('new-ccc',function(spec){
 	var ccc = BSD.CCC(spec);
 	BSD.ccc.push(ccc);
 });
-
-
-
-
-
-
 
 
 function lookupCCT(text) {
@@ -452,8 +448,8 @@ jQuery('.new-ccc').click(function(){
 
 
 campfire.subscribe('save-zz',function(){
-	var ccc = BSD.ccc.map(function(o) { return o.spec; });
-	var cct = BSD.cct.map(function(o) { return o.spec; });
+	var ccc = BSD.ccc.select(function(o) { return o; }).map(function(o) { return o.spec; });
+	var cct = BSD.cct.select(function(o) { return o; }).map(function(o) { return o.spec; });
 	var combined = { 
 		ccc: ccc,
 		cct: cct
@@ -476,28 +472,15 @@ campfire.subscribe('maybe-conceptify',function(word){
 		var name = word;
 		var cand = BSD.CandC(word);
 		cand.subscribe('save',function(){
-			campfire.publish('new-cct',word);
+			campfire.publish('new-cct-name',word);
 			cand.destroy();
 		});
 		cand.renderOn(candidatesWrap);
 	});
 
-	/***
-	BSD.id += 1;
-	var assetSpec = { id: BSD.id, name: name };
-	var asset = BSD.Asset(assetSpec);
-	BSD.assets.push(asset);
-
-	var cctSpec = [BSD.id,1,name];
-	var cct = BSD.CCT(cctSpec);
-	BSD.cct.push(cct);
-	var c = BSD.C(BSD.id);
-	c.renderOn(candidatesWrap);
-	BSD.c.push(c);
-	***/
 });
 
-campfire.subscribe('save-from-editor',function(){
+campfire.subscribe('save-from-notes',function(){
 	//console.log("PONG");
 	var content = myEditor.getContent();
 	console.log(content,'content');
@@ -552,159 +535,130 @@ function fifo(them,x) {
 	///var justx = them.map(function())
 }
 
-
-
-
-//Coinbase
 /**
+//Coinbase
 
 x = [];
 jQuery('.tx-amount').each(function(i,e) { var shares = jQuery(e).find('.positive').text(); var usd = jQuery(e).find('.transfer').text(); x.push([shares,usd]) })
 
 jQuery('.tx-item').each(function(i,e) { var shares = jQuery(e).find('.positive').text().trim().split(/\ /)[0]; var usd = jQuery(e).find('.transfer').text().trim().split(/\ /)[0].replace(/\$/,''); var usdps = usd/shares; x.push([parseFloat(shares),usdps]); })
-
-BTC =
-[
-    [
-        0.00431868,
-        1204.0716144747933
-    ],
-    [
-        0.00401531,
-        1295.0432220675364
-    ],
-    [
-        0.03571518,
-        1164.7708341383131
-    ],
-    [
-        0.12111015,
-        1257.0374985085891
-    ],
-    [
-        0.04209536,
-        1205.3585003192752
-    ],
-    [
-        0.04757334,
-        1066.5637518828823
-    ],
-    [
-        0.08358533,
-        1244.1178374243423
-    ],
-    [
-        0.07940607,
-        1244.1114388358474
-    ]
-]"
-
-
-
-"0.41781942 @ 1217.0329469128073"
-
-
-ETH =
-
-[
-    [
-        0.30447518,
-        17.078567783423267
-    ],
-    [
-        2.08564508,
-        18.94857393473678
-    ],
-    [
-        1.10215427,
-        46.03711239080896
-    ],
-    [
-        1.10226454,
-        46.032506860830345
-    ],
-    [
-        2.19898107,
-        47.290084220688634
-    ],
-    [
-        1.85412151,
-        164.21253858383858
-    ]
-]
-"8.64764165 @ 64.14003059435287"
 **/
 
 	tinymce.init({ 
-		selector:'textarea',
+		selector: '.notes',
 		init_instance_callback: function (editor) {
 			myEditor = editor;
     	editor.on('click', function (e) {
-      	console.log('Element clicked:', e.target.nodeName);
+      		console.log('Element clicked:', e.target.nodeName);
     	});
 			editor.on('keyup',function(e) {
 				///console.log('keyup',e);
-				waiter2s.beg(campfire,'save-from-editor');		
+				waiter2s.beg(campfire,'save-from-notes');		
 			});
-  	}
+  		}
 	});
 
-
-	var newSpec = []
-
-
-
-var recvDrop = jQuery('.new-recv.drop');
-var msgDrop = jQuery('.new-msg.drop');
-var respDrop = jQuery('.new-resp.drop');
-
-	jQuery('.drop').on('dragover',function(evt){
-		evt.preventDefault();
-		var id = evt.originalEvent.dataTransfer.getData('text');
-		console.log('ID',id);
-	});
-
-	recvDrop.on('drop',function(evt){
-			var id = evt.originalEvent.dataTransfer.getData('text');
-			var c = BSD.C(id);
-			recvDrop.empty();
-			c.renderOn(recvDrop);
-			newSpec[0] = parseInt(id,10);
-	});
-	msgDrop.on('drop',function(evt){
-			var id = evt.originalEvent.dataTransfer.getData('text');
-			var c = BSD.C(id);
-			msgDrop.empty();
-			c.renderOn(msgDrop);
-			newSpec[1] = parseInt(id,10);
-	});
-	respDrop.on('drop',function(evt){
-			var id = evt.originalEvent.dataTransfer.getData('text');
-			var c = BSD.C(id);
-			respDrop.empty();
-			c.renderOn(respDrop);
-			newSpec[2] = parseInt(id,10);
-	});
-
-	jQuery('.new-recv.drop').on('drop',function(evt){
-		//evt.preventDefault();
-	});
-
-	jQuery('.btn-save-trio').click(function(){
-		if (! (newSpec[0] && newSpec[1] && newSpec[2])) { 
-			console.log('incomplete');
-			return false;
-		}
-		if (typeof newSpec[2] == "string") {
-			campfire.publish('new-cct',newSpec);
-		}
-		else {
-			campfire.publish('new-ccc',newSpec);
-		}
-	});
+	BSD.Widgets.Trifecta = function(spec) {
+		var self = BSD.PubSub({});
 
 
+		var myEditor = false;
+		var newSpec = [];
+		self.newSpec = newSpec;
 
+		self.renderOn = function(wrap) {
+			var inner = wrap;
+			var recvDrop = DOM.div().addClass('recv drop col-xs-1');
+			var msgDrop = DOM.div().addClass('msg drop col-xs-1');
+			var respDrop = DOM.div().addClass('resp drop col-xs-1');
+			///
+			var inner = DOM.div().addClass('inner col-xs-3');
+			var respHTML = DOM.div();
+			var respText = DOM.input().attr('type','text').attr('placeholder','text').attr('tabindex',2);
+
+
+			[recvDrop,msgDrop,respDrop].forEach(function(div){
+				div.on('dragover',function(evt){
+					evt.preventDefault();
+				});
+			});
+			recvDrop.on('drop',function(evt){
+				var id = evt.originalEvent.dataTransfer.getData('text');
+				var c = BSD.C(id);
+				recvDrop.empty();
+				c.renderOn(recvDrop);
+				newSpec[0] = parseInt(id,10);
+			});
+			msgDrop.on('drop',function(evt){
+					var id = evt.originalEvent.dataTransfer.getData('text');
+					var c = BSD.C(id);
+					msgDrop.empty();
+					c.renderOn(msgDrop);
+					newSpec[1] = parseInt(id,10);
+			});
+			respDrop.on('drop',function(evt){
+					var id = evt.originalEvent.dataTransfer.getData('text');
+					var c = BSD.C(id);
+					respDrop.empty();
+					c.renderOn(respDrop);
+					newSpec[2] = parseInt(id,10);
+			});
+
+			
+			respText.on('change',function(){
+				newSpec[2] = this.value;
+			});
+			
+
+			tinymce.init({ 
+				target: respHTML[0],
+				init_instance_callback: function (editor) {
+					myEditor = editor;
+		    	editor.on('click', function (e) {
+		      		console.log('Element clicked:', e.target.nodeName);
+		    	});
+					editor.on('keyup',function(e) {
+						///console.log('keyup',e);
+						waiter2s.beg(self,'editor-update');		
+					});
+		  		}
+			});
+
+			var btnSave = DOM.button('save trio').addClass('btn btn-primary btn-sm');
+			btnSave.click(function(){
+				if (! (newSpec[0] && newSpec[1] && newSpec[2])) { 
+					console.log('incomplete');
+					return false;
+				}
+				if (typeof newSpec[2] == "string") {
+					self.publish('new-cct',newSpec);
+				}
+				else {
+					self.publish('new-ccc',newSpec);
+				}
+			});
+
+			wrap.append(recvDrop);
+			wrap.append(msgDrop);
+			wrap.append(respDrop);
+			inner.append(respText);
+			inner.append(respHTML);
+			wrap.append(inner);
+			wrap.append(btnSave);
+
+		};
+		self.subscribe('editor-update',function(){
+			newSpec[2] = myEditor.getContent();
+			console.log('spec',newSpec);
+		});
+
+		return self;
+	};
+
+	var x = BSD.Widgets.Trifecta();
+	x.renderOn(jQuery('.trifecta'));
+	x.subscribe('new-ccc',function(o){ campfire.publish('new-ccc',o); });
+	x.subscribe('new-cct',function(o){ campfire.publish('new-cct',o); });
 
 </script>
 <?php

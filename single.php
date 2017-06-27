@@ -30,6 +30,15 @@ get_header(); ?>
 		width: 30px;
 	}
 
+	.inline { display: inline; }
+	.inline-block { display: inline-block; }
+	.grid-cell {
+
+		border: 1px solid red;
+		margin-left: 3px;
+		min-width: 50px;
+		padding: 1rem;
+	}
 
 </style>
 
@@ -70,6 +79,11 @@ get_header(); ?>
 
 
 <div class="row trifecta">
+</div>
+
+<div class="row">
+	<div class="col-md-12 col-xs-12 grid">
+	</div>
 </div>
 
 
@@ -394,6 +408,7 @@ BSD.remoteStorage.getItem('single',function(o) {
 		BSD.c.push(c);
 	}
 
+	campfire.publish('concepts-loaded');
 });
 
 
@@ -684,10 +699,47 @@ jQuery('.tx-item').each(function(i,e) { var shares = jQuery(e).find('.positive')
 		return self;
 	};
 
+
+	BSD.Widgets.Grid = function() {
+		var self = BSD.PubSub({});
+		var perRow = 5;
+			var table = DOM.table();
+			var thead = DOM.thead();
+			var tbody = DOM.tbody();
+		/***
+		self.refresh = function() {
+			var rows = BSD.chunkify(BSD.c,perRow);
+			rows.forEach(function(row){
+			});
+		};
+		**/
+		self.renderOn = function(wrap) {
+			BSD.c.forEach(function(concept){
+				var inline = DOM.div().addClass('inline-block grid-cell');
+				inline.append(DOM.span(concept.spec));
+				concept.renderOn(inline);
+				wrap.append(inline);
+			});
+			//self.refresh();
+		}
+		return self;
+	};
+
+
+
+
 	var x = BSD.Widgets.Trifecta();
 	x.renderOn(jQuery('.trifecta'));
 	x.subscribe('new-ccc',function(o){ campfire.publish('new-ccc',o); });
 	x.subscribe('new-cct',function(o){ campfire.publish('new-cct',o); });
+
+
+campfire.subscribe('concepts-loaded',function(){
+	var grid = BSD.Widgets.Grid({});
+	grid.renderOn(jQuery('.grid'));
+});
+
+
 
 </script>
 <?php

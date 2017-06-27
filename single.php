@@ -20,11 +20,16 @@ get_header(); ?>
 		min-width: 10px;
 	}
 
-.inner .drop {
+	.inner .drop {
 		height: 100px;
 		width: 100px;
 
-}
+	}
+
+	.svg-wrap {
+		width: 30px;
+	}
+
 
 </style>
 
@@ -87,7 +92,7 @@ BSD.id = 0;
 BSD.constants = {};
 BSD.constants.TITLE = 1;
 BSD.constants.IMAGEURL = 2;
-
+///BSD.constants.SVG = 
 
 BSD.Asset = function(spec) {
 	var self = BSD.PubSub({});
@@ -218,6 +223,12 @@ BSD.C = function(spec) {
 		var thumb = DOM.img().addClass('thumb').attr('src',imageURL || BSD.baseURL + '/images/zimzam-white.png');
 		inner.append(thumb);
 
+		var svgWrap = DOM.div().addClass('svg-wrap');
+		self.svg(function(innerHTML){
+			svgWrap.html(innerHTML);
+			inner.append(svgWrap);
+		});
+
 		if (!imageURL) {
 			var imageInput = DOM.input();
 			imageInput.change(function(){
@@ -265,8 +276,21 @@ BSD.C = function(spec) {
 		if (!hit) { return false; }
 		return hit.resp;
 	};
-
-
+	self.svg = function(success,error) {
+		lookupC('svg',function(c){
+			var hit = cct.detect(function(o){
+				return o.msg == c.spec; //C's spec is just their id..
+			});
+			if (hit) { 
+				success(hit.resp);
+				return true; 
+			}
+			if (error) {
+				error(false);
+				return false;				
+			}
+		},error);
+	};
 	return self;
 }
 
@@ -410,28 +434,33 @@ campfire.subscribe('new-ccc',function(spec){
 });
 
 
-function lookupCCT(text) {
+function lookupCCT(text,success,error) {
 	var result = BSD.cct.detect(function(cct){ 
 		return cct.resp.toLowerCase() == text.toLowerCase(); 
 	});
-	return result;
+	if (result) {
+		success(result);
+		return true;
+	}
+	if (error) {
+		error(result);
+		return false;		
+	}
 }
 
 function lookupC(text,success,error) {
-	var cct = lookupCCT(text);
-	if (!cct) { 
-		error(text);
-		return false;
-	}
-
-	var hit = BSD.c.detect(function(c){ 
-		return c.spec == cct.recv;
-	});
-	if (hit) {
-		success(hit);
-		return false;
-	}
-	error(text);
+	lookupCCT(text,function(cct){
+		var hit = BSD.c.detect(function(c){ 
+			return c.spec == cct.recv;
+		});
+		if (hit) {
+			success(hit);
+			return false;
+		}
+		if (error) {
+			error(text);
+		}
+	},error);
 }
 
 

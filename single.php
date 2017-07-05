@@ -588,6 +588,32 @@ jQuery('.tx-amount').each(function(i,e) { var shares = jQuery(e).find('.positive
 jQuery('.tx-item').each(function(i,e) { var shares = jQuery(e).find('.positive').text().trim().split(/\ /)[0]; var usd = jQuery(e).find('.transfer').text().trim().split(/\ /)[0].replace(/\$/,''); var usdps = usd/shares; x.push([parseFloat(shares),usdps]); })
 **/
 
+BSD.importJSON('data/trades.json',function(data) { 
+	console.log('trades',data); 
+	BSD.trades = data; 
+});
+
+function getTrades(symbol,success,error) {
+	var them = BSD.trades.select(function(trade){
+		return trade[0] == symbol;
+	});
+	var snipped = them.map(function(o){
+		return [o[1],o[2]]; //just #shares and USD pricepershare.
+	});
+	if (success) {
+		success(snipped);
+	}
+	return snipped;
+}
+
+function breakEven(symbol,cb) {
+	var trx = getTrades(symbol);
+	var evolved = evolveTrx(trx);
+	return evolved.toString();
+}
+
+
+/** TINYMCE **/
 	tinymce.init({ 
 		selector: '.notes',
 		init_instance_callback: function (editor) {

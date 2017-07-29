@@ -49,17 +49,37 @@
 
 </head>
 <body>
-  <textarea id="notes"></textarea>
+  
+<label>Key <input type="text" class="key" value="notes" />
+</label>
 
+  <textarea id="notes"></textarea>
+  <div class="btn-group">
+    <button class="btn btn-primary btn-load">Load</button>
+    <button class="btn btn-primary btn-save">Set Key</button>
+  </div>
   <script type="text/javascript">
   
-  
-  var notes = localStorage.notes;
-  if (!notes) {
-    notes = '';
-  }
+var notes;
+
+  BSD.key = 'notes';
+  var inputKey = jQuery('input.key');
+  inputKey.change(function(){
+  });
+
+  var btnLoad = jQuery('.btn-load');
+  btnLoad.click(function(){
+    BSD.key = inputKey.val();
+    notes = localStorage[BSD.key];
+    notesInput.summernote('code',notes);
+  });
+
+  var btnSave = jQuery('.btn-save');
+  btnSave.click(function(){
+    BSD.key = inputKey.val();
+    ////////localStorage[BSD.key] = notes;
+  });
  
-  var myEditor = false; 
   var waiter = BSD.Widgets.Procrastinator({ timeout: 4000 });
   
   var campfire = BSD.PubSub({});
@@ -84,7 +104,7 @@
     waiter.beg(campfire,'notes-update',content);
   })
  
-/**
+  /**
   notesInput.keyup(function(){
     waiter.beg(campfire,'notes-update',this.value);
     ////console.log(this.value);
@@ -95,13 +115,15 @@
   
   
   campfire.subscribe('notes-update',function(o){
-    console.log('update!!');
-    localStorage.notes = o;
+    //console.log('update!!');
+    localStorage[BSD.key] = o;
   });
  
+/**
  campfire.subscribe('save-from-editor',function() {
 			localStorage.notes = myEditor.getContent();
 	});
+  **/
   
   
   function getRandomArbitrary(min, max) {
@@ -126,56 +148,6 @@
     }
     return result;
   }
-    
-    
-  </script>
-  <script>
-  /**
-      save.click(function(){
-        var markupStr = textarea.summernote('code');
-        console.log(markupStr,opts);
-        jQuery.ajax({
-            type: 'POST',
-            ///url: TTI.themeURL + '/ws',
-            url: TTI.baseURL + '/wp-admin/admin-ajax.php',
-            data: { action: 'update_box', box: boxFilename, content: markupStr },
-            success: function(a) {
-              msg.html('saved!');
-            },
-            error: function(e) {
-              msg.html('uh oh: ' + e);
-              console.log(e);
-            }
-        });
-      });
-      inner.append(save);
-      inner.append(msg);
-      **/
-      /**
-
-
-
-
-
-
-  /********
-myEditor = false;
-	tinymce.init({ 
-		selector:'textarea',
-		init_instance_callback: function (editor) {
-			myEditor = editor;
-    	editor.on('click', function (e) {
-      	console.log('Element clicked:', e.target.nodeName);
-    	});
-			editor.on('keyup',function(e) {
-				///console.log('keyup',e);
-				waiter.beg(campfire,'save-from-editor');		
-			});
-  	}
-	});
-********/
-
-
 
 </script>
 </body>

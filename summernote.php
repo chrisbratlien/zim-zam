@@ -27,6 +27,8 @@
   <script src="//cdn.dev.bratliensoftware.com/javascript/color.js"></script>
   <script src="//cdn.dev.bratliensoftware.com/javascript/bsd.pubsub.js"></script>
   <script src="//cdn.dev.bratliensoftware.com/javascript/bsd.widgets.procrastinator.js"></script>
+  <script src="js/bsd.storage.js"></script>
+  <script src="js/bsd.remotestorage.js"></script>
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style type="text/css">
@@ -50,34 +52,48 @@
 </head>
 <body>
   
-<label>Key <input type="text" class="key" value="notes" />
+<label>Key <input type="text" class="key" value="notes" /> </label>
+<label>Local <input type="radio" class="storage-local"  name="storage-where" value="local" checked="checked" /> </label>
+<label>Remote <input type="radio" class="storage-remote" name="storage-where"  value="remote" /> </label>
 </label>
-
-  <textarea id="notes"></textarea>
   <div class="btn-group">
     <button class="btn btn-primary btn-load">Load</button>
     <button class="btn btn-primary btn-save">Set Key</button>
   </div>
+  <textarea id="notes"></textarea>
   <script type="text/javascript">
-  
-var notes;
 
+
+  BSD.storage = BSD.Storage('ZZ::');
+  BSD.remoteStorage = BSD.RemoteStorage({ prefix: 'ZZ::' });
+
+
+  
   BSD.key = 'notes';
   var inputKey = jQuery('input.key');
   inputKey.change(function(){
   });
 
+  var vault = BSD.storage;
+  var storageWhere = jQuery('input[type="radio"][name="storage-where"]');
+  storageWhere.change(function(){
+    vault = (this.value.match(/local/)) ? BSD.storage : BSD.remoteStorage;
+    console.log('vault',vault);
+  });
+
+
+
   var btnLoad = jQuery('.btn-load');
   btnLoad.click(function(){
     BSD.key = inputKey.val();
-    notes = localStorage[BSD.key];
-    notesInput.summernote('code',notes);
+    vault.getItem(BSD.key,function(data){
+      notesInput.summernote('code',data);
+    });
   });
 
   var btnSave = jQuery('.btn-save');
   btnSave.click(function(){
     BSD.key = inputKey.val();
-    ////////localStorage[BSD.key] = notes;
   });
  
   var waiter = BSD.Widgets.Procrastinator({ timeout: 4000 });
@@ -96,7 +112,7 @@ var notes;
       console.log('woo?')
     }
   })
-  notesInput.summernote('code',notes);
+  //////notesInput.summernote('code',notes);
   notesInput.on('summernote.change',function(e){
     //console.log('s.c',e);
     var content = notesInput.summernote('code');
@@ -115,8 +131,7 @@ var notes;
   
   
   campfire.subscribe('notes-update',function(o){
-    //console.log('update!!');
-    localStorage[BSD.key] = o;
+    vault.setItem(BSD.key,o);
   });
  
 /**

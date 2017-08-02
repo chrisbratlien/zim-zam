@@ -2,8 +2,6 @@
 <html lang="en">
   <title>Summer Notes</title>
 <head>
-
-
 <!-- include libraries(jQuery, bootstrap) -->
 <link href="http://netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.css" rel="stylesheet">
 <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.js"></script> 
@@ -65,7 +63,8 @@
 
 
   BSD.storage = BSD.Storage('ZZ::summernote');
-  BSD.remoteStorage = BSD.RemoteStorage({ prefix: 'ZZ::' });
+
+  BSD.remoteZZ = BSD.RemoteStorage({ prefix: 'ZZ::' });
 
 
   
@@ -77,7 +76,7 @@
   var vault = BSD.storage;
   var storageWhere = jQuery('input[type="radio"][name="storage-where"]');
   storageWhere.change(function(){
-    vault = (this.value.match(/local/)) ? BSD.storage : BSD.remoteStorage;
+    vault = (this.value.match(/local/)) ? BSD.storage : BSD.remoteZZ;
     console.log('vault',vault);
   });
 

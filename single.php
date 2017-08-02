@@ -224,11 +224,13 @@ BSD.C = function(spec) {
 	});
 
 
+	/*
 	var panel = DOM.div().addClass('link-panel');
 	var messageDrop = DOM.div().addClass('drop msg-drop');
 	var responseDrop = DOM.div().addClass('drop recv-drop');
 	panel.append(messageDrop);
 	panel.append(responseDrop);
+	*/
 
 	self.renderOn = function(wrap) {
 		inner.append(DOM.div(self.name()));
@@ -267,10 +269,12 @@ BSD.C = function(spec) {
 			inner.append(imageInput);
 		}
 
+		/*
 		var plus = DOM.i().addClass("fa fa-plus");
 		plus.on('click',function(){
 		});
 		inner.append(plus);
+		*/
 		//inner.append(panel);
 
 		wrap.append(inner);

@@ -64,7 +64,7 @@
   <script type="text/javascript">
 
 
-  BSD.storage = BSD.Storage('ZZ::');
+  BSD.storage = BSD.Storage('ZZ::summernote');
   BSD.remoteStorage = BSD.RemoteStorage({ prefix: 'ZZ::' });
 
 

@@ -64,7 +64,10 @@
 
   BSD.storage = BSD.Storage('ZZ::summernote');
 
-  BSD.remoteZZ = BSD.RemoteStorage({ prefix: 'ZZ::' });
+  BSD.remoteZZ = BSD.RemoteStorage({ 
+    prefix: 'ZZ::summernote', 
+    url: location.href.replace(/summernote/,'ws')
+  });
 
 
   
@@ -87,6 +90,9 @@
     BSD.key = inputKey.val();
     vault.getItem(BSD.key,function(data){
       notesInput.summernote('code',data);
+    },function(e){
+      console.log(e,'e?');
+      alert(e);
     });
   });
 

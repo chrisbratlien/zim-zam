@@ -3,11 +3,13 @@ BSD.RemoteStorage = function(spec) {
   
   var prefix = spec.prefix;
   var url = spec.url;
- 
-  
-  if (!prefix) { throw('configuration error: set BSD.RemoteStorage needs prefix'); 
+
+  if (!url) { throw('configuration error: BSD.RemoteStorage needs url '); 
     return false;
-  };
+  }
+  if (!prefix) { throw('configuration error: BSD.RemoteStorage needs prefix'); 
+    return false;
+  }
   var self = {};
   
   
@@ -25,7 +27,7 @@ BSD.RemoteStorage = function(spec) {
     self.morlock('setItem',{ key: prefix+k, value: v },success,error);
   };
   self.getItem = function(k,success,error) {
-    self.morlock('getItem',{ key: prefix+k, value: null },success,error);
+    self.morlock('getItem',{ key: prefix+k },success,error);
   };
   self.removeItem = function(k,success,error) {
     self.morlock('removeItem',{ key: prefix+k, value: null },success,error);

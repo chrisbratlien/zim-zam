@@ -1340,6 +1340,13 @@ add_action('ws_setItem',function($opts) {
 add_action('ws_getItem',function($opts) {
   $data = $opts['data'];
   $value = remote_db_get($data['key']);
+
+  if (empty($value)) {
+    header("HTTP/1.0 404 Not Found");
+    die('404 not found');
+  }
+  //var_dump($value);
+  //pr($value,'value');
   echo $value;
   exit;
 });

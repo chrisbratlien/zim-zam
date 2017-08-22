@@ -62,10 +62,10 @@
   <script type="text/javascript">
 
 
-  BSD.storage = BSD.Storage('ZZ::summernote');
+  BSD.storage = BSD.Storage('ZZ::summernote::');
 
   BSD.remoteZZ = BSD.RemoteStorage({ 
-    prefix: 'ZZ::summernote', 
+    prefix: 'ZZ::summernote::', 
     url: location.href.replace(/summernote/,'ws')
   });
 

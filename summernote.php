@@ -20,11 +20,11 @@
 -->
   <meta charset="utf-8">
  
-  <script type="text/javascript" src="//cdn.dev.bratliensoftware.com/javascript/array.js"></script>
-  <script type="text/javascript" src="//cdn.dev.bratliensoftware.com/javascript/dom.js"></script>
+  <script type="text/javascript" src="js/array.js"></script>
+  <script type="text/javascript" src="js/dom.js"></script>
   <script src="//cdn.dev.bratliensoftware.com/javascript/color.js"></script>
-  <script src="//cdn.dev.bratliensoftware.com/javascript/bsd.pubsub.js"></script>
-  <script src="//cdn.dev.bratliensoftware.com/javascript/bsd.widgets.procrastinator.js"></script>
+  <script src="js/bsd.pubsub.js"></script>
+  <script src="js/bsd.widgets.procrastinator.js"></script>
   <script src="js/bsd.storage.js"></script>
   <script src="js/bsd.remotestorage.js"></script>
   
@@ -51,6 +51,7 @@
 <body>
   
 <label>Key <input type="text" class="key" value="notes" /> </label>
+<select class="toc"></select>
 <label>Local <input type="radio" class="storage-local"  name="storage-where" value="local" checked="checked" /> </label>
 <label>Remote <input type="radio" class="storage-remote" name="storage-where"  value="remote" /> </label>
 </label>
@@ -81,6 +82,7 @@
   storageWhere.change(function(){
     vault = (this.value.match(/local/)) ? BSD.storage : BSD.remoteZZ;
     console.log('vault',vault);
+    campfire.publish('get-toc');
   });
 
 
@@ -101,8 +103,12 @@
     BSD.key = inputKey.val();
   });
  
+
+  var ddTOC = jQuery('.toc');
+
+
+
   var waiter = BSD.Widgets.Procrastinator({ timeout: 4000 });
-  
   var campfire = BSD.PubSub({});
   
   var notesInput = jQuery('#notes');
@@ -137,8 +143,53 @@
   
   campfire.subscribe('notes-update',function(o){
     vault.setItem(BSD.key,o);
+    campfire.publish('insert-toc',BSD.key);
   });
  
+  campfire.subscribe('init-toc',function(v){
+    vault.setItem('toc',JSON.stringify(v),function(){
+      campfire.publish('toc-updated',v);
+    });
+  });
+
+  campfire.subscribe('get-toc',function(){
+    vault.getItem('toc',function(data){
+      var toc = JSON.parse(data);
+      campfire.publish('toc-updated',toc);    
+    });
+  });
+
+  campfire.subscribe('insert-toc',function(key){
+    vault.getItem('toc',function(data) {
+      var toc = JSON.parse(data);
+      toc.push(key);
+      /////toc.sort().unique();
+      toc = toc.sort().unique();
+      vault.setItem('toc',JSON.stringify(toc));
+      campfire.publish('toc-updated',toc);
+    },function(){
+      campfire.publish('init-toc',[key]);
+    });
+  });
+
+  campfire.subscribe('toc-updated',function(toc){
+    ddTOC.empty();
+    toc.forEach(function(key){
+      var opt = DOM.option(key);
+      ddTOC.append(opt);
+    });
+  });
+
+
+  ddTOC.change(function(){
+    inputKey.val(this.value);
+  });
+
+
+
+  campfire.publish('get-toc');
+
+
 /**
  campfire.subscribe('save-from-editor',function() {
 			localStorage.notes = myEditor.getContent();

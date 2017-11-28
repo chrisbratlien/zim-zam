@@ -9,8 +9,12 @@ BSD.Storage = function (prefix) {
   }
 
   var self = {};
-  self.setItem = function(k,v) {
-    return localStorage.setItem(prefix + k,v);
+  self.setItem = function(k,v,success,error) {
+    var result = localStorage.setItem(prefix + k,v);
+    if (success) {  //if callback provided, call it.
+      success(result); 
+    }
+    return result;
   };
 
   self.getItem = function(k,success,error) {

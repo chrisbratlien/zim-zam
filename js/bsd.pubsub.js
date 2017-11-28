@@ -1,25 +1,35 @@
-if (typeof BSD == "undefined") { BSD = {}; }
+BSD = window.BSD || {};
 BSD.PubSub = function(spec) {
-  var self = {};
-  var callbacks = {};
-  self.subscribe = function(topic,callback) {
-    if (typeof callbacks[topic] == "undefined") {
+  var self = {},
+      nickname = spec.nickname || '',
+      callbacks = {};
+
+  self.hash = Math.random().toString(36).substr(2);
+
+  self.subscribe = function(topic, callback) {
+    if (typeof callbacks[topic] === "undefined") {
       callbacks[topic] = [];
-    }  
-    callbacks[topic].push(callback);
-  };
-  self.publish = function(topic,payload) {
-    ////console.log('Huggy: publish',topic,payload);
-    if (typeof callbacks[topic] == "undefined") {
-      //console.log('no subscribers to ' + topic);
-      return false;
     }
 
+    callbacks[topic].push(callback);
+  };
 
-  
-    callbacks[topic].each(function(cb) {
-      cb(payload);
+  self.publish = function(topic, payload) {
+    if (typeof callbacks.publish !== "undefined") { //SPECIAL EXTRA CASE: if there are subscribers to the topic named "publish"...
+      callbacks.publish.each(function(cb){
+        cb(topic + ' (' + nickname + ' ' + self.hash + ')'); //then send them a real-time transcript of which topic is presently being published to.
+      });
+    }
+    var args = Array.prototype.slice.call(arguments);    
+    var topic = args.shift();
+    ///console.log('topic',topic,'args',args);
+    if (typeof callbacks[topic] == "undefined") {
+      return false;
+    }
+    callbacks[topic].forEach(function(cb) {
+      cb.apply(null,args);
     });   
   };
+
   return self;
 };

@@ -93,8 +93,10 @@
     vault.getItem(BSD.key,function(data){
       notesInput.summernote('code',data);
     },function(e){
-      console.log(e,'e?');
-      alert(e);
+
+      campfire.publish('insert-toc',BSD.key);
+      //console.log(e,'e?');
+      //alert(e);
     });
   });
 

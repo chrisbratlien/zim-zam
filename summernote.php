@@ -146,16 +146,16 @@
     campfire.publish('insert-toc',BSD.key);
   });
  
-  campfire.subscribe('init-toc',function(v){
-    vault.setItem('toc',JSON.stringify(v),function(){
-      campfire.publish('toc-updated',v);
+  campfire.subscribe('init-toc',function(toc,selected){
+    vault.setItem('toc',JSON.stringify(toc),function(){
+      campfire.publish('toc-updated',toc,selected);
     });
   });
 
   campfire.subscribe('get-toc',function(){
     vault.getItem('toc',function(data){
       var toc = JSON.parse(data);
-      campfire.publish('toc-updated',toc);    
+      campfire.publish('toc-updated',toc,'notes');    
     });
   });
 
@@ -166,16 +166,19 @@
       /////toc.sort().unique();
       toc = toc.sort().unique();
       vault.setItem('toc',JSON.stringify(toc));
-      campfire.publish('toc-updated',toc);
+      campfire.publish('toc-updated',toc,key);
     },function(){
       campfire.publish('init-toc',[key]);
     });
   });
 
-  campfire.subscribe('toc-updated',function(toc){
+  campfire.subscribe('toc-updated',function(toc,selected){
     ddTOC.empty();
     toc.forEach(function(key){
       var opt = DOM.option(key);
+      if (selected && key == selected) {
+        opt.attr('selected',true);
+      }
       ddTOC.append(opt);
     });
   });

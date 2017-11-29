@@ -42,6 +42,12 @@
     
     textarea { width: 100%; height: auto; }
     
+    .key-tab { 
+      background: #abf;
+      font-weight: bold; 
+      padding: 0.5rem;
+    }
+
   </style>
 
 
@@ -59,10 +65,14 @@
     <button class="btn btn-primary btn-load">Load</button>
     <button class="btn btn-primary btn-save">Set Key</button>
   </div>
-  <textarea id="notes"></textarea>
+  <div class="notes-wrap">
+    <span class="key-tab"></span>
+    <textarea id="notes"></textarea>    
+  </div>
   <script type="text/javascript">
 
-
+  var campfire = BSD.PubSub({});
+  
   BSD.storage = BSD.Storage('ZZ::summernote::');
 
   BSD.remoteZZ = BSD.RemoteStorage({ 
@@ -87,17 +97,26 @@
 
 
 
-  var btnLoad = jQuery('.btn-load');
-  btnLoad.click(function(){
-    BSD.key = inputKey.val();
+function loadKey(key) {
+    BSD.key = key;
     vault.getItem(BSD.key,function(data){
+      campfire.publish('key-loaded',key);
       notesInput.summernote('code',data);
     },function(e){
-
       campfire.publish('insert-toc',BSD.key);
       //console.log(e,'e?');
       //alert(e);
     });
+}
+
+
+  campfire.subscribe('key-loaded',function(key){
+    jQuery('.key-tab').html(key);
+  });
+
+  var btnLoad = jQuery('.btn-load');
+  btnLoad.click(function(){
+    loadKey(inputKey.val());
   });
 
   var btnSave = jQuery('.btn-save');
@@ -111,7 +130,6 @@
 
 
   var waiter = BSD.Widgets.Procrastinator({ timeout: 4000 });
-  var campfire = BSD.PubSub({});
   
   var notesInput = jQuery('#notes');
   

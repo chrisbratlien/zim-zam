@@ -71,6 +71,22 @@
   </div>
   <script type="text/javascript">
 
+
+//FIXME: move this
+BSD.sorter = function(selectorFunc) {
+  var sortFunc = function(a,b) {
+    var sA = selectorFunc(a);
+    var sB = selectorFunc(b);
+    if (sA < sB) { return -1; }
+    if (sA > sB) { return 1; }
+    return 0;
+  };
+  return sortFunc;
+};
+  
+
+
+
   var campfire = BSD.PubSub({});
   
   BSD.storage = BSD.Storage('ZZ::summernote::');
@@ -99,10 +115,12 @@
 
 function loadKey(key) {
     BSD.key = key;
+    campfire.publish('key-change',key);
+
     vault.getItem(BSD.key,function(data){
-      campfire.publish('key-loaded',key);
       notesInput.summernote('code',data);
     },function(e){
+      notesInput.summernote('reset');
       campfire.publish('insert-toc',BSD.key);
       //console.log(e,'e?');
       //alert(e);
@@ -110,7 +128,7 @@ function loadKey(key) {
 }
 
 
-  campfire.subscribe('key-loaded',function(key){
+  campfire.subscribe('key-change',function(key){
     jQuery('.key-tab').html(key);
   });
 
@@ -163,7 +181,7 @@ function loadKey(key) {
   
   campfire.subscribe('notes-update',function(o){
     vault.setItem(BSD.key,o);
-    campfire.publish('insert-toc',BSD.key);
+    ////campfire.publish('insert-toc',BSD.key);
   });
  
   campfire.subscribe('init-toc',function(toc,selected){
@@ -184,7 +202,7 @@ function loadKey(key) {
       var toc = JSON.parse(data);
       toc.push(key);
       /////toc.sort().unique();
-      toc = toc.sort().unique();
+      toc = toc.sort(BSD.sorter(function(item){ return item.toUpperCase(); })).unique();
       vault.setItem('toc',JSON.stringify(toc));
       campfire.publish('toc-updated',toc,key);
     },function(){
@@ -194,6 +212,7 @@ function loadKey(key) {
 
   campfire.subscribe('toc-updated',function(toc,selected){
     ddTOC.empty();
+    toc = toc.sort(BSD.sorter(function(item){ return item.toUpperCase(); })).unique();
     toc.forEach(function(key){
       var opt = DOM.option(key);
       if (selected && key == selected) {

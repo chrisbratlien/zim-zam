@@ -180,6 +180,10 @@ function loadKey(key) {
   
   
   campfire.subscribe('notes-update',function(o){
+		if (o.length < 20) {
+			alert('warning, almost emptied the notes');
+    	return false;
+		}
     vault.setItem(BSD.key,o);
     ////campfire.publish('insert-toc',BSD.key);
   });

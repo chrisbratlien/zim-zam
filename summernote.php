@@ -184,7 +184,13 @@ function loadKey(key) {
 			alert('warning, almost emptied the notes');
     	return false;
 		}
-    vault.setItem(BSD.key,o);
+    vault.setItem(BSD.key,o); ///SAVE
+
+    var now = (new Date);
+    var month = ('0' + (now.getMonth()+1)).slice(-2);
+    var stamp = now.getFullYear() + '-' + month;
+    var backupKey = 'backup::' + stamp + '::' + BSD.key;
+    vault.setItem(backupKey,o); //SAVE BACKUP
     ////campfire.publish('insert-toc',BSD.key);
   });
  

@@ -1157,6 +1157,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
     var r = jQuery.ajax({
       type: 'POST',
       url: ZZ.baseURL + '/ws',
+      dataType: 'json',
       data: { 
         action: 'askzim',
         receiver: a,
@@ -1177,6 +1178,7 @@ ZZ.Widgets.ConceptSearch = function(spec) {
     var r = jQuery.ajax({
       type: 'POST',
       url: ZZ.baseURL + '/ws',
+      dataType: 'json',
       data: { 
         action: 'askzam',
         receiver: a,
@@ -1715,6 +1717,7 @@ ZZ.Widgets.Gallery = function(spec) {
     var img = DOM.img();
     lightboxContent.empty();
     lightboxContent.append(img);
+    //lightboxContent.append(flipper);
     
     var linked = glyphURLs.map(function(o){
       return { url: o };
@@ -1735,9 +1738,8 @@ ZZ.Widgets.Gallery = function(spec) {
       img.attr('src',present.url);
     });
     
-    
-    ////console.log('lightbox create: ' + uniqueID);
-    
+
+
 
 
       

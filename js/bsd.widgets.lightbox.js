@@ -69,6 +69,18 @@ BSD.Widgets.Lightbox = function (spec) {
     close.html('close');
 
 
+    var flipper = DOM.i().addClass('flipper fa-repeat');
+    var nextFlip = [0,90,180,270];
+    var flipIdx = 0;
+    flipper.click(function(){
+      flipIdx += 1; flipIdx %= 4;
+      box.removeClass('flip-0 flip-90 flip-180 flip-270').addClass('flip-' + nextFlip[flipIdx]);
+    }); 
+    ////console.log('lightbox create: ' + uniqueID);
+
+
+
+
     self.toggle = function() {
       if (showing) {
         self.hide();
@@ -119,6 +131,7 @@ BSD.Widgets.Lightbox = function (spec) {
     wrap.append(overlay);
     wrap.append(box);
     box.append(close);
+    box.append(flipper);
 
 
     jQuery(document.body).append(wrap);

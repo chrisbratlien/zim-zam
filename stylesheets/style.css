@@ -82,3 +82,25 @@ ul.search-results li { list-style-type: none; line-height: 2em; }
 }
 
 
+.flipper {
+	position: absolute;
+	top: 0;
+	left: 0;
+	color: white;
+}
+.flip-0 { 
+	transform: none;
+}
+.flip-90 {
+	transform: rotate(90deg);
+}
+.flip-180 {
+	transform: rotate(180deg);
+}
+.flip-270 {
+	transform: rotate(270deg);
+}
+
+
+
+

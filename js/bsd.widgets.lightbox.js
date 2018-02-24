@@ -31,7 +31,7 @@ BSD.Widgets.Lightbox = function (spec) {
     overlay.css('background', '#000');
     overlay.css('opacity', 0.5);
 
-    var box = DOM.div().addClass('box');
+    var box = DOM.div().addClass('box flip');
     /////box.addClass('content');
 
     box.css('display', 'none');
@@ -69,7 +69,7 @@ BSD.Widgets.Lightbox = function (spec) {
     close.html('close');
 
 
-    var flipper = DOM.i().addClass('flipper fa-repeat');
+    var flipper = DOM.i().addClass('flipper fa fa-repeat');
     var nextFlip = [0,90,180,270];
     var flipIdx = 0;
     flipper.click(function(){

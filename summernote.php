@@ -154,6 +154,14 @@ function loadKey(key) {
 //  notesInput.text(notes);
   //notesInput.summernote();
   notesInput.summernote({
+
+		fontNames: ['Arial','Arial Black','Calibri','Comic Sans MS','Courier New','Helvetica Neue','Helvetica','Impact','Lucida Grande','Tahoma','Times New Roman','Verdana'],
+
+//fontNames: ['Roboto Light', 'Roboto Regular', 'Roboto Bold', 'Thai Sans Neue Light', 'Thai Sans Neue Regular', 'Thai Sans Neue Bold'],
+
+//fontNamesIgnoreCheck: ['Roboto Light', 'Roboto Regular', 'Roboto Bold', 'Thai Sans Neue Light', 'Thai Sans Neue Regular', 'Thai Sans Neue Bold'],
+
+
     onChange: function() {
       console.log('woaotoatow');
     },

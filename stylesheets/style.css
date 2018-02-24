@@ -88,6 +88,9 @@ ul.search-results li { list-style-type: none; line-height: 2em; }
 	left: 0;
 	color: white;
 }
+.flip {
+  transform-origin: 50% 50%;
+}
 .flip-0 { 
 	transform: none;
 }
